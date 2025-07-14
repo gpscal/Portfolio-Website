@@ -42,7 +42,9 @@ Upload files to your RedHat server in this structure:
 
 Run the deployment script:
 
-bashsudo chmod +x deploy.sh
+BASH
+
+sudo chmod +x deploy.sh
 sudo ./deploy.sh
 
 Add your profile image to static/images/profile.jpg
