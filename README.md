@@ -40,12 +40,11 @@ Upload files to your RedHat server in this structure:
     └── images/
         └── profile.jpg  # Add your profile image
 
-Run the deployment script:
+***STEP TO DEPLOY***
+1. Open terminal and run:
+   git clone https://github.com/gpscal/Portfolio-Website.git
 
-BASH
 
-sudo chmod +x deploy.sh
-sudo ./deploy.sh
 
 Add your profile image to static/images/profile.jpg
 
