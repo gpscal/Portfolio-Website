@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Flask Portfolio Website for Ryan M. Montgomery
-Compatible with RedHat Linux
-"""
 
 from flask import Flask, render_template, send_from_directory
 import os
