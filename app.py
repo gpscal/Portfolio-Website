@@ -1,5 +1,11 @@
+
 from flask import Flask, render_template, request, jsonify, redirect, url_for
 import json
+
+#!/usr/bin/env python3
+
+from flask import Flask, render_template, send_from_directory
+>>>>>>> 64d8c7989408ba711da295341db6d2ae438dcfda
 import os
 from datetime import datetime, timedelta
 import jwt
