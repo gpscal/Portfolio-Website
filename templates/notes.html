@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Notes - Hierarchical Documentation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notes.css') }}">
+</head>
+<body>
+    <div class="network-bg">
+        <svg id="network-svg"></svg>
+    </div>
+
+    <div class="notes-container">
+        <header class="notes-header">
+            <h1>Command Notes</h1>
+            <div class="header-actions">
+                <span class="user-info">Welcome, <span id="current-user">User</span></span>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
+        </header>
+
+        <div class="notes-content">
+            <div class="sidebar">
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search commands...">
+                </div>
+
+                <div class="category-actions">
+                    <button id="add-category-btn" class="add-btn">+ Add Category</button>
+                </div>
+
+                <div id="categories-tree" class="categories-tree">
+                    <!-- Categories will be dynamically loaded here -->
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="content-header">
+                    <h2 id="current-category">Select a category</h2>
+                    <div class="content-actions">
+                        <button id="add-command-btn" class="add-btn" style="display: none;">+ Add Command</button>
+                    </div>
+                </div>
+
+                <div id="commands-list" class="commands-list">
+                    <div class="welcome-message">
+                        <h3>Welcome to Command Notes</h3>
+                        <p>Select a category from the sidebar to view commands, or create a new category to get started.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing categories -->
+    <div id="category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="category-modal-title">Add Category</h3>
+            <form id="category-form">
+                <input type="hidden" id="category-id">
+                <input type="hidden" id="parent-category-id">
+                <div class="form-group">
+                    <label for="category-name">Category Name:</label>
+                    <input type="text" id="category-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="category-description">Description:</label>
+                    <textarea id="category-description" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="save-btn">Save</button>
+                    <button type="button" class="cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for adding/editing commands -->
+    <div id="command-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="command-modal-title">Add Command</h3>
+            <form id="command-form">
+                <input type="hidden" id="command-id">
+                <input type="hidden" id="command-category-id">
+                <div class="form-group">
+                    <label for="command-name">Command Name:</label>
+                    <input type="text" id="command-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="command-syntax">Syntax:</label>
+                    <input type="text" id="command-syntax" placeholder="e.g., ls -la [directory]">
+                </div>
+                <div class="form-group">
+                    <label for="command-description">Description:</label>
+                    <textarea id="command-description" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="command-examples">Examples:</label>
+                    <textarea id="command-examples" rows="6" placeholder="Provide usage examples..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="command-tags">Tags (comma-separated):</label>
+                    <input type="text" id="command-tags" placeholder="linux, file, directory">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="save-btn">Save</button>
+                    <button type="button" class="cancel-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/network.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notes.js') }}"></script>
+</body>
+</html>

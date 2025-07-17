@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "categoryId": "1",
+    "name": "ls",
+    "syntax": "ls [options] [directory]",
+    "description": "List directory contents",
+    "examples": "ls -la\nls -lh /home\nls --color=auto",
+    "tags": "linux,file,directory,list",
+    "created_at": "2025-07-16T23:11:27.492818"
+  },
+  {
+    "id": "2",
+    "categoryId": "1",
+    "name": "cp",
+    "syntax": "cp [options] source destination",
+    "description": "Copy files or directories",
+    "examples": "cp file.txt backup.txt\ncp -r folder/ backup_folder/\ncp -v *.txt /backup/",
+    "tags": "linux,file,copy",
+    "created_at": "2025-07-16T23:11:27.718748"
+  },
+  {
+    "id": "3",
+    "categoryId": "2",
+    "name": "ping",
+    "syntax": "ping [options] hostname",
+    "description": "Send ICMP echo requests to network hosts",
+    "examples": "ping google.com\nping -c 4 192.168.1.1\nping -i 2 example.com",
+    "tags": "network,diagnostic,icmp",
+    "created_at": "2025-07-16T23:11:27.851040"
+  },
+  {
+    "id": "4",
+    "categoryId": "3",
+    "name": "git clone",
+    "syntax": "git clone [options] <repository> [directory]",
+    "description": "Clone a repository into a new directory",
+    "examples": "git clone https://github.com/user/repo.git\ngit clone --depth 1 repo.git\ngit clone -b branch repo.git",
+    "tags": "git,clone,repository",
+    "created_at": "2025-07-16T23:11:27.927951"
+  }
+]

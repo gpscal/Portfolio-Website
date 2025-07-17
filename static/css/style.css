@@ -87,6 +87,58 @@ body {
     line-height: 1.6;
 }
 
+/* Navigation Links Styles */
+.nav-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 30px 0;
+    flex-wrap: wrap;
+}
+
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+    border: none;
+    cursor: pointer;
+}
+
+.nav-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+    background: linear-gradient(135deg, #2980b9, #3498db);
+}
+
+.nav-btn:active {
+    transform: translateY(-1px);
+}
+
+.nav-btn.secondary {
+    background: linear-gradient(135deg, #27ae60, #229954);
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+
+.nav-btn.secondary:hover {
+    background: linear-gradient(135deg, #229954, #27ae60);
+    box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+}
+
+.nav-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
 .social-links {
     display: flex;
     justify-content: center;
@@ -128,21 +180,44 @@ body {
     .name {
         font-size: 3rem;
     }
-    
+
     .full-name {
         font-size: 1.5rem;
     }
-    
+
     .profile-card {
         padding: 30px 20px;
     }
-    
+
+    .nav-links {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .nav-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 15px 20px;
+    }
+
     .social-links {
         gap: 15px;
     }
-    
+
     .social-links a {
         width: 45px;
         height: 45px;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-btn {
+        font-size: 0.9rem;
+        padding: 12px 16px;
+    }
+
+    .nav-icon {
+        width: 16px;
+        height: 16px;
     }
 }

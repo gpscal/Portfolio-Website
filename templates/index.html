@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ryan M. Montgomery - 0day</title>
+    <title>Caleb Gonsalves</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -14,16 +14,27 @@
     <div class="container">
         <div class="profile-card">
             <div class="profile-image">
-                <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="Ryan Montgomery">
+                <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="Caleb Gonsalves">
             </div>
-            
-            <h1 class="name">0day</h1>
-            <h2 class="full-name">Ryan M. Montgomery</h2>
+
+            <h1 class="name">You're best buddy</h1>
+            <h2 class="full-name">Caleb Gonsalves</h2>
             <p class="description">
-                Pentester / Child Safety Warrior /<br>
+                Pentester / Physicist /<br>
                 Entrepreneur
             </p>
-            
+
+            <!-- Navigation Links to New Features -->
+            <div class="nav-links">
+                <a href="{{ url_for('login_page') }}" class="nav-btn">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9M19 9H14V4H5V21H19V9Z"/>
+                    </svg>
+                    Command Notes
+                </a>
+                
+            </div>
+
             <div class="social-links">
                 <a href="#" title="Instagram">
                     <svg viewBox="0 0 24 24" fill="currentColor">
