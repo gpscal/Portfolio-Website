@@ -664,92 +664,86 @@ def upload_pcap():
         'message': 'PCAP uploaded and training sample created'
     }), 200
 
-@app.route('/api/test-routellm', methods=['POST'])
-def test_routellm():
-    q = request.json.get("question", "Hello RouteLLM test")
-    return jsonify(ask_routellm(q))
+        
+def ask_routellm(query, context=None, model="route-llm", temperature=0.3, stream=False):
+    """
+    Send a chat request to Abacus RouteLLM API.
+    Supports both streaming and non-streaming.
 
-def ask_routellm(query, context=None, model="gpt-4o-mini", temperature=0.3):  
-    """  
-    Send a chat request to Abacus RouteLLM API.  
-      
-    Args:  
-        query (str): The user's question/prompt  
-        context (dict, optional): Additional context to include in the message  
-        model (str): Model name (default: gpt-4o-mini)  
-        temperature (float): Temperature for response randomness  
-      
-    Returns:  
-        dict: JSON response from RouteLLM or error dict  
-    """  
-    endpoint = os.getenv("ROUTELLM_ENDPOINT")  
-    api_key = os.getenv("ROUTELLM_API_KEY")  
-      
-    if not endpoint or not api_key:  
-        logging.error("Missing ROUTELLM_ENDPOINT or ROUTELLM_API_KEY")  
-        return {"error": "RouteLLM not configured"}  
-      
-    # Build messages array (OpenAI chat format)  
-    messages = []  
-      
-    # Optional: add system message with context  
-    if context:  
-        system_content = f"You are a helpful assistant. Context: {context}"  
-        messages.append({"role": "system", "content": system_content})  
-      
-    # Add user query  
-    messages.append({"role": "user", "content": query})  
-      
-    # Build payload  
-    payload = {  
-        "model": model,  
-        "messages": messages,  
-        "temperature": temperature  
-    }  
-      
-    headers = {  
-        "Authorization": f"Bearer {api_key}",  
-        "Content-Type": "application/json"  
-    }  
-      
-    logging.info(f"[RouteLLM] Endpoint: {endpoint}")  
-    logging.info(f"[RouteLLM] Payload: {payload}")  
-    logging.info(f"[RouteLLM] Headers: {{'Authorization': 'Bearer {api_key[:8]}...', 'Content-Type': 'application/json'}}")  
-      
-    try:  
-        response = requests.post(endpoint, headers=headers, json=payload, timeout=30)  
-          
-        logging.info(f"[RouteLLM] Status: {response.status_code}")  
-        logging.info(f"[RouteLLM] Response head: {response.text[:200]}")  
-          
-        if response.status_code == 200:  
-            data = response.json()
+    Args:
+        query (str): The user question
+        context (str, optional): System / context info
+        model (str): Model name
+        temperature (float): Response randomness
+        stream (bool): Whether to request streaming mode
 
+    Returns:
+        - If stream=False: dict (JSON response)
+        - If stream=True : generator (for Flask Response)
+    """
+    endpoint = os.getenv("ROUTELLM_ENDPOINT")
+    api_key = os.getenv("ROUTELLM_API_KEY")
 
-            choices = data.get("choices", [])  
-            if choices and "message" in choices[0]:  
-                answer = choices[0]["message"].get("content", "").strip()  
-                return {  
-                    "success": True,  
-                    "answer": answer,  
-                    "raw": data  # Optional: include raw for debugging  
-                }  
-            else:  
-                return {"error": "⚠️ No answer returned", "raw": data}
-        else:  
-            logging.error(f"RouteLLM returned {response.status_code}")  
-            return {  
-                "error": f"RouteLLM returned {response.status_code}",  
-                "details": response.text  
-            }  
-      
-    except requests.exceptions.JSONDecodeError as e:  
-        logging.error(f"[RouteLLM] Exception occurred", exc_info=True)  
-        return {"error": f"RouteLLM request failed: {str(e)}"}  
-      
-    except Exception as e:  
-        logging.error(f"[RouteLLM] Exception occurred", exc_info=True)  
-        return {"error": f"RouteLLM request failed: {str(e)}"}
+    if not endpoint or not api_key:
+        return {"error": "RouteLLM not configured"}
+
+    # Build messages
+    messages = []
+    if context:
+        messages.append({"role": "system", "content": f"You are a helpful assistant. Context: {context}"})
+    messages.append({"role": "user", "content": query})
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "stream": stream
+    }
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+
+    if stream:
+        # Return a generator for Flask streaming Response
+        def generate():
+            with requests.post(endpoint, headers=headers, json=payload, stream=True) as r:
+                r.raise_for_status()
+                for raw_line in r.iter_lines():
+                    if not raw_line:
+                        continue  # skip empty heartbeat lines
+                    try:
+                        decoded = raw_line.decode("utf-8").strip()
+                        logging.debug("RAW STREAM: %s", decoded)
+
+                        # Handle SSE-style format: "data: { ... }"
+                        if decoded.startswith("data:"):
+                            decoded = decoded[len("data:"):].strip()
+                        if decoded == "" or decoded == "[DONE]":
+                            break
+                        # Try parse as JSON
+                        data = json.loads(decoded)
+                        if "answer" in data:
+                            yield data["answer"]
+                    except json.JSONDecodeError:
+                        # Not JSON – just stream as raw text
+                        continue
+                    except Exception as e:
+                        logging.error("Stream parse error: %s", e)
+                        yield f"[Stream error: {str(e)}]\n"
+
+        return generate()
+
+    else:
+        # Non-streaming request
+        try:
+            r = requests.post(endpoint, headers=headers, json=payload)
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            logging.error("Non-streaming request failed: %s", e)
+            return {"error": str(e)}
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze():
@@ -770,72 +764,67 @@ def analyze():
 
 @app.route('/api/pcap/<pcap_id>/route-llm', methods=['POST'])
 def route_llm_handler(pcap_id):
-    """
-    Accepts JSON: { "question": "..." }
-    Loads parsed PCAP metadata, runs ML analysis, and queries RouteLLM.
-    Always returns JSON (never HTML).
-    """
+    """Stream responses from RouteLLM"""
     try:
         body = request.get_json() or {}
         question = (body.get("question") or "").strip()
         if not question:
             return jsonify({"error": "❌ Missing 'question'"}), 400
 
-        # Load parsed PCAP metadata
+        # Load PCAP metadata
         metadata_path = os.path.join(METADATA_DIR, f"{pcap_id}.json")
         if not os.path.exists(metadata_path):
-            return jsonify({"error": "❌ PCAP not found or not yet parsed"}), 404
+            return jsonify({"error": "❌ PCAP not found"}), 404
 
         parsed_data = load_data(metadata_path, default={})
-        if not parsed_data:
-            return jsonify({"error": "❌ Failed to load PCAP metadata"}), 500
-
-        # Run ML anomaly detection
         ml_analysis = analyze_with_ml(parsed_data)
 
-        # Prepare context for RouteLLM
+        # Build context
         context = {
             "pcap_metadata": parsed_data,
             "ml_analysis": ml_analysis
         }
 
-        # Ask RouteLLM
-        result = ask_routellm(question, context=context)
-        if "error" in result:
-            # Log error for debugging
-            app.logger.error(f"RouteLLM error: {result}")
-            return jsonify(result), 502
+        # Stream the response
+        def generate():
+            messages = [
+                {"role": "system", "content": f"You are a network analysis expert. Context: {json.dumps(context)}"},
+                {"role": "user", "content": question}
+            ]
 
-        # ✅ Extract LLM answer safely (fixed formatting)
-        answer = (
-            result.get("answer")
-            or result.get("output_text")
-            or "⚠️ No answer returned."
-        )
+            response = requests.post(
+                ROUTELLM_ENDPOINT,
+                headers={
+                    "Authorization": f"Bearer {ROUTELLM_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": ROUTELLM_MODEL,
+                    "messages": messages,
+                    "stream": True  # ✅ Enable streaming
+                },
+                stream=True
+            )
 
-        # Build stats summary for frontend
-        stats = {
-            "packet_count": parsed_data.get("packet_count", 0),
-            "total_bytes": parsed_data.get("total_bytes", 0),
-            "duration_seconds": parsed_data.get("duration_seconds", 0),
-            "protocols": parsed_data.get("protocols", {}),
-            "sip_packets": parsed_data.get("sip_packet_count", 0),
-            "rtp_packets": parsed_data.get("rtp_packet_count", 0),
-            "sip_calls": parsed_data.get("sip_call_count", 0),
-            "rtp_streams": parsed_data.get("rtp_stream_count", 0),
-        }
+            for line in response.iter_lines():
+                if line:
+                    line = line.decode("utf-8")
+                    if line.startswith("data: "):
+                        line = line[6:]
+                        if line == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(line)
+                            if chunk["choices"][0].get("delta", {}).get("content"):
+                                yield f"data: {json.dumps({'content': chunk['choices'][0]['delta']['content']})}\n\n"
+                        except:
+                            continue
 
-        return jsonify({
-            "answer": answer,
-            "stats": stats,
-            "ml_analysis": ml_analysis
-        })
+        return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
     except Exception as e:
-        # Log exception details
-        app.logger.exception("Unexpected error in /route-llm")
-        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
-
+        app.logger.exception("Error in route-llm")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/pcap/<pcap_id>/label', methods=['POST'])
 def label_pcap_for_ml(pcap_id):

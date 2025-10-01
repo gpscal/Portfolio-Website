@@ -1,0 +1,319 @@
+{
+  "stats": {
+    "format": "pcap",
+    "packet_count": 39,
+    "total_bytes": 7905,
+    "duration_seconds": 34.57,
+    "sip_packets": 8,
+    "rtp_packets": 0,
+    "note": "SIP: 8, RTP: 0"
+  },
+  "packets": [
+    {
+      "index": 0,
+      "timestamp": 1722534790.935512,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 1,
+      "timestamp": 1722534791.421267,
+      "length": 197,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 2,
+      "timestamp": 1722534791.422001,
+      "length": 112,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 3,
+      "timestamp": 1722534792.975451,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 4,
+      "timestamp": 1722534795.015487,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 5,
+      "timestamp": 1722534797.055513,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 6,
+      "timestamp": 1722534799.095551,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 7,
+      "timestamp": 1722534799.107248,
+      "length": 60,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 8,
+      "timestamp": 1722534801.135577,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 9,
+      "timestamp": 1722534803.165608,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 10,
+      "timestamp": 1722534803.641781,
+      "length": 75,
+      "protocol": "UDP",
+      "src_ip": "192.168.2.112",
+      "dst_ip": "8.8.8.8",
+      "src_port": 53874,
+      "dst_port": 53
+    },
+    {
+      "index": 11,
+      "timestamp": 1722534803.657571,
+      "length": 139,
+      "protocol": "UDP",
+      "src_ip": "8.8.8.8",
+      "dst_ip": "192.168.2.112",
+      "src_port": 53,
+      "dst_port": 53874
+    },
+    {
+      "index": 12,
+      "timestamp": 1722534803.658255,
+      "length": 90,
+      "protocol": "UDP",
+      "src_ip": "192.168.2.112",
+      "dst_ip": "84.16.67.12",
+      "src_port": 50456,
+      "dst_port": 123
+    },
+    {
+      "index": 13,
+      "timestamp": 1722534803.813267,
+      "length": 90,
+      "protocol": "UDP",
+      "src_ip": "84.16.67.12",
+      "dst_ip": "192.168.2.112",
+      "src_port": 123,
+      "dst_port": 50456
+    },
+    {
+      "index": 14,
+      "timestamp": 1722534804.503463,
+      "length": 601,
+      "protocol": "SIP",
+      "src_ip": "192.168.2.112",
+      "dst_ip": "192.168.5.5",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "REGISTER"
+    },
+    {
+      "index": 15,
+      "timestamp": 1722534805.011431,
+      "length": 601,
+      "protocol": "SIP",
+      "src_ip": "192.168.2.112",
+      "dst_ip": "192.168.5.5",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "REGISTER"
+    },
+    {
+      "index": 16,
+      "timestamp": 1722534805.125628,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 17,
+      "timestamp": 1722534806.021503,
+      "length": 601,
+      "protocol": "SIP",
+      "src_ip": "192.168.2.112",
+      "dst_ip": "192.168.5.5",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "REGISTER"
+    },
+    {
+      "index": 18,
+      "timestamp": 1722534807.155646,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 19,
+      "timestamp": 1722534808.031501,
+      "length": 601,
+      "protocol": "SIP",
+      "src_ip": "192.168.2.112",
+      "dst_ip": "192.168.5.5",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "REGISTER"
+    },
+    {
+      "index": 20,
+      "timestamp": 1722534808.570562,
+      "length": 42,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 21,
+      "timestamp": 1722534808.570695,
+      "length": 60,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 22,
+      "timestamp": 1722534809.185673,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 23,
+      "timestamp": 1722534811.225708,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 24,
+      "timestamp": 1722534812.041498,
+      "length": 601,
+      "protocol": "SIP",
+      "src_ip": "192.168.2.112",
+      "dst_ip": "192.168.5.5",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "REGISTER"
+    },
+    {
+      "index": 25,
+      "timestamp": 1722534813.265741,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 26,
+      "timestamp": 1722534814.219065,
+      "length": 216,
+      "protocol": "UDP",
+      "src_ip": "192.168.2.111",
+      "dst_ip": "239.255.255.250",
+      "src_port": 49429,
+      "dst_port": 1900
+    },
+    {
+      "index": 27,
+      "timestamp": 1722534815.22946,
+      "length": 216,
+      "protocol": "UDP",
+      "src_ip": "192.168.2.111",
+      "dst_ip": "239.255.255.250",
+      "src_port": 49429,
+      "dst_port": 1900
+    },
+    {
+      "index": 28,
+      "timestamp": 1722534815.305765,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 29,
+      "timestamp": 1722534816.051391,
+      "length": 601,
+      "protocol": "SIP",
+      "src_ip": "192.168.2.112",
+      "dst_ip": "192.168.5.5",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "REGISTER"
+    },
+    {
+      "index": 30,
+      "timestamp": 1722534816.238982,
+      "length": 216,
+      "protocol": "UDP",
+      "src_ip": "192.168.2.111",
+      "dst_ip": "239.255.255.250",
+      "src_port": 49429,
+      "dst_port": 1900
+    },
+    {
+      "index": 31,
+      "timestamp": 1722534817.240578,
+      "length": 216,
+      "protocol": "UDP",
+      "src_ip": "192.168.2.111",
+      "dst_ip": "239.255.255.250",
+      "src_port": 49429,
+      "dst_port": 1900
+    },
+    {
+      "index": 32,
+      "timestamp": 1722534817.345804,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 33,
+      "timestamp": 1722534819.38588,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 34,
+      "timestamp": 1722534820.064353,
+      "length": 601,
+      "protocol": "SIP",
+      "src_ip": "192.168.2.112",
+      "dst_ip": "192.168.5.5",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "REGISTER"
+    },
+    {
+      "index": 35,
+      "timestamp": 1722534821.425887,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 36,
+      "timestamp": 1722534823.465891,
+      "length": 76,
+      "protocol": "Unknown"
+    },
+    {
+      "index": 37,
+      "timestamp": 1722534824.071384,
+      "length": 601,
+      "protocol": "SIP",
+      "src_ip": "192.168.2.112",
+      "dst_ip": "192.168.5.5",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "REGISTER"
+    },
+    {
+      "index": 38,
+      "timestamp": 1722534825.505936,
+      "length": 76,
+      "protocol": "Unknown"
+    }
+  ]
+}
