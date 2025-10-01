@@ -1,0 +1,35 @@
+{
+  "pcap_id": "0cbd09ad-3fb3-4ff6-a2e8-636c4963a2a8",
+  "timestamp": "2025-10-01T06:30:05.899560",
+  "label": "normal",
+  "features": {
+    "packet_count": 10000,
+    "total_bytes": 4694492,
+    "duration_seconds": 12.32,
+    "packets_per_second": 811.6883116883116,
+    "bytes_per_second": 381046.4285714286,
+    "avg_packet_size": 477.461,
+    "sip_packets": 0,
+    "rtp_packets": 0,
+    "sip_ratio": 0.0,
+    "rtp_ratio": 0.0,
+    "avg_interarrival": 0.008317410408913551,
+    "jitter": 0.06561699245741301,
+    "packet_loss_ratio": 0,
+    "protocol_count": 3,
+    "unique_protocols": [
+      "TCP",
+      "UDP",
+      "ICMP"
+    ]
+  },
+  "stats": {
+    "format": "pcap",
+    "packet_count": 10000,
+    "total_bytes": 4694492,
+    "duration_seconds": 12.32,
+    "sip_packets": 0,
+    "rtp_packets": 0,
+    "note": "SIP: 0, RTP: 0"
+  }
+}

@@ -1,0 +1,233 @@
+{
+  "stats": {
+    "format": "pcap",
+    "packet_count": 20,
+    "total_bytes": 12202,
+    "duration_seconds": 12.66,
+    "sip_packets": 20,
+    "rtp_packets": 0,
+    "note": "SIP: 20, RTP: 0"
+  },
+  "packets": [
+    {
+      "index": 0,
+      "timestamp": 1750885644.568941,
+      "length": 995,
+      "protocol": "SIP",
+      "src_ip": "104.250.66.36",
+      "dst_ip": "10.0.2.100",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 1,
+      "timestamp": 1750885644.569081,
+      "length": 444,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.100",
+      "dst_ip": "104.250.66.36",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "SIP/2.0"
+    },
+    {
+      "index": 2,
+      "timestamp": 1750885644.570413,
+      "length": 1092,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.100",
+      "dst_ip": "10.0.2.136",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 3,
+      "timestamp": 1750885644.571227,
+      "length": 565,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.136",
+      "dst_ip": "10.0.2.100",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "SIP/2.0"
+    },
+    {
+      "index": 4,
+      "timestamp": 1750885644.643257,
+      "length": 857,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.136",
+      "dst_ip": "10.0.2.100",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "SIP/2.0"
+    },
+    {
+      "index": 5,
+      "timestamp": 1750885644.64332,
+      "length": 474,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.100",
+      "dst_ip": "10.0.2.136",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "ACK"
+    },
+    {
+      "index": 6,
+      "timestamp": 1750885644.65278,
+      "length": 1061,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.200",
+      "dst_ip": "10.0.2.254",
+      "src_port": 5060,
+      "dst_port": 3555,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 7,
+      "timestamp": 1750885644.653056,
+      "length": 1155,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.200",
+      "dst_ip": "10.0.2.254",
+      "src_port": 5060,
+      "dst_port": 22650,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 8,
+      "timestamp": 1750885644.698948,
+      "length": 393,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.254",
+      "dst_ip": "10.0.2.200",
+      "src_port": 3555,
+      "dst_port": 5060,
+      "sip_method": "SIP/2.0"
+    },
+    {
+      "index": 9,
+      "timestamp": 1750885644.70188,
+      "length": 406,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.254",
+      "dst_ip": "10.0.2.200",
+      "src_port": 22650,
+      "dst_port": 5060,
+      "sip_method": "SIP/2.0"
+    },
+    {
+      "index": 10,
+      "timestamp": 1750885644.911678,
+      "length": 458,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.254",
+      "dst_ip": "10.0.2.200",
+      "src_port": 3555,
+      "dst_port": 5060,
+      "sip_method": "SIP/2.0"
+    },
+    {
+      "index": 11,
+      "timestamp": 1750885644.911721,
+      "length": 476,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.200",
+      "dst_ip": "10.0.2.254",
+      "src_port": 5060,
+      "dst_port": 3555,
+      "sip_method": "ACK"
+    },
+    {
+      "index": 12,
+      "timestamp": 1750885657.12821,
+      "length": 462,
+      "protocol": "SIP",
+      "src_ip": "104.250.66.36",
+      "dst_ip": "10.0.2.100",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "CANCEL"
+    },
+    {
+      "index": 13,
+      "timestamp": 1750885657.128365,
+      "length": 489,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.100",
+      "dst_ip": "104.250.66.36",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "SIP/2.0"
+    },
+    {
+      "index": 14,
+      "timestamp": 1750885657.12845,
+      "length": 502,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.200",
+      "dst_ip": "10.0.2.254",
+      "src_port": 5060,
+      "dst_port": 22650,
+      "sip_method": "CANCEL"
+    },
+    {
+      "index": 15,
+      "timestamp": 1750885657.177679,
+      "length": 459,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.254",
+      "dst_ip": "10.0.2.200",
+      "src_port": 22650,
+      "dst_port": 5060,
+      "sip_method": "SIP/2.0"
+    },
+    {
+      "index": 16,
+      "timestamp": 1750885657.177687,
+      "length": 443,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.254",
+      "dst_ip": "10.0.2.200",
+      "src_port": 22650,
+      "dst_port": 5060,
+      "sip_method": "SIP/2.0"
+    },
+    {
+      "index": 17,
+      "timestamp": 1750885657.177728,
+      "length": 489,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.200",
+      "dst_ip": "10.0.2.254",
+      "src_port": 5060,
+      "dst_port": 22650,
+      "sip_method": "ACK"
+    },
+    {
+      "index": 18,
+      "timestamp": 1750885657.178823,
+      "length": 481,
+      "protocol": "SIP",
+      "src_ip": "10.0.2.100",
+      "dst_ip": "104.250.66.36",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "SIP/2.0"
+    },
+    {
+      "index": 19,
+      "timestamp": 1750885657.224715,
+      "length": 501,
+      "protocol": "SIP",
+      "src_ip": "104.250.66.36",
+      "dst_ip": "10.0.2.100",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "ACK"
+    }
+  ]
+}

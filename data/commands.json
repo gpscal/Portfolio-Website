@@ -48,5 +48,15 @@
     "examples": "",
     "tags": "",
     "created_at": "2025-07-17T01:34:41.385643"
+  },
+  {
+    "id": "6",
+    "categoryId": "3",
+    "name": "git push",
+    "syntax": "git push ",
+    "description": "",
+    "examples": "",
+    "tags": "",
+    "created_at": "2025-07-17T19:02:17.465172"
   }
 ]

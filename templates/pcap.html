@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PCAP Explorer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <!-- Add marked.js for markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* page-specific tweaks on top of notes.css */
+        .upload-zone {
+            border: 2px dashed #3498db;
+            padding: 24px;
+            border-radius: 10px;
+            background: rgba(52, 152, 219, 0.06);
+            text-align: center;
+        }
+        .upload-zone.dragover {
+            background: rgba(52, 152, 219, 0.15);
+        }
+        .pcap-stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 14px;
+        }
+        .stat-card { 
+            background: #fff; 
+            border-radius: 8px; 
+            padding: 12px; 
+            box-shadow: 0 1px 6px rgba(0,0,0,0.08); 
+        }
+        .stat-card h4 {
+            margin: 0 0 10px 0;
+            color: #666;
+            font-size: 14px;
+        }
+        .chat-box { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); height: 100%; display: flex; flex-direction: column; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 8px; border: 1px solid #ecf0f1; border-radius: 8px; margin-bottom: 10px; }
+        .msg { padding: 10px 12px; margin: 8px 0; border-radius: 8px; line-height: 1.6; }
+        .msg.user { background: #e8f6ff; }
+        .msg.bot {
+            background: #eef9f0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        /* Markdown formatting in bot messages */
+        .msg.bot h1, .msg.bot h2, .msg.bot h3 { margin: 12px 0 8px 0; color: #2c3e50; }
+        .msg.bot h1 { font-size: 1.3em; border-bottom: 2px solid #27ae60; padding-bottom: 4px; }
+        .msg.bot h2 { font-size: 1.2em; border-bottom: 1px solid #27ae60; padding-bottom: 3px; }
+        .msg.bot h3 { font-size: 1.1em; color: #27ae60; }
+        .msg.bot p { margin: 8px 0; }
+        .msg.bot ul, .msg.bot ol { margin: 8px 0; padding-left: 24px; }
+        .msg.bot li { margin: 4px 0; }
+        .msg.bot code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .msg.bot pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+        .msg.bot pre code {
+            background: none;
+            padding: 0;
+        }
+        .msg.bot strong { color: #2c3e50; font-weight: 600; }
+        .msg.bot em { font-style: italic; color: #555; }
+        .msg.bot blockquote {
+            border-left: 4px solid #27ae60;
+            padding-left: 12px;
+            margin: 8px 0;
+            color: #555;
+        }
+        .msg.bot hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 12px 0;
+        }
+        .helper { color: #7f8c8d; font-size: 0.9rem; }
+
+        /* Loading indicator styles */
+        .loading-indicator {
+            display: none;
+            padding: 12px;
+            background: #f0f8ff;
+            border-left: 4px solid #3498db;
+            border-radius: 6px;
+            margin: 8px 0;
+            align-items: center;
+            gap: 10px;
+        }
+        .loading-indicator.active {
+            display: flex;
+        }
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ecf0f1;
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Layout improvements - remove wasted space */
+        .notes-header {
+            padding: 12px 24px;
+            min-height: auto;
+        }
+        .notes-header h1 {
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        .notes-content {
+            height: calc(100vh - 60px);
+            padding: 0;
+        }
+        .main-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .content-header {
+            margin-bottom: 16px;
+        }
+        .content-header h2 {
+            font-size: 1.3rem;
+            margin: 0;
+        }
+
+        /* ML Dashboard Styles */
+        .ml-dashboard {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .ml-dashboard h3 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+        .ml-status {
+            margin-bottom: 15px;
+        }
+        .ml-actions {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .btn {
+            padding: 8px 16px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #1976D2;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #mlDetails {
+            margin-top: 20px;
+        }
+        .ml-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .ml-table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .ml-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .ml-table thead tr {
+            background: #f0f0f0;
+        }
+        .ml-table th,
+        .ml-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .label-badge {
+            padding: 3px 8px;
+            color: white;
+            border-radius: 3px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        .label-normal {
+            background: #4CAF50;
+        }
+        .label-anomaly {
+            background: #ff9800;
+        }
+        .btn-small {
+            font-size: 12px;
+            padding: 4px 8px;
+            margin-right: 4px;
+        }
+        .btn-delete {
+            background: #f44336;
+        }
+        .btn-delete:hover {
+            background: #d32f2f;
+        }
+        
+        /* Label controls */
+        .label-controls {
+            margin-top: 12px;
+            padding: 12px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+        .label-controls h4 {
+            font-size: 14px;
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+        }
+        .label-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .label-btn {
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: white;
+            transition: opacity 0.2s;
+        }
+        .label-btn:hover {
+            opacity: 0.9;
+        }
+        .label-btn.normal {
+            background: #4CAF50;
+        }
+        .label-btn.anomaly {
+            background: #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="network-bg">
+        <svg id="network-svg"></svg>
+    </div>
+
+    <div class="notes-container">
+        <header class="notes-header">
+            <h1>PCAP Explorer</h1>
+            <div class="header-actions">
+                <span class="user-info">Welcome, <span id="current-user">Guest</span></span>
+                <button id="logout-btn" class="logout-btn" title="Clear local data">Clear</button>
+            </div>
+        </header>
+
+        <div class="notes-content">
+            <div class="sidebar">
+                <div class="upload-zone" id="upload-zone">
+                    <h3>Upload a .pcap or .pcapng</h3>
+                    <p class="helper">Drag & drop here or click to browse</p>
+                    <input type="file" id="pcap-file" accept=".pcap,.pcapng" style="display:none" />
+                    <button class="add-btn" id="choose-file-btn">Choose File</button>
+                    <div id="upload-status" class="helper" style="margin-top:8px"></div>
+                </div>
+
+                <!-- Label Controls -->
+                <div id="label-controls" class="label-controls" style="display: none;">
+                    <h4>🏷️ Label for ML Training:</h4>
+                    <div class="label-buttons">
+                        <button onclick="pcapUI.labelCurrentPcap('normal')" class="label-btn normal">
+                            ✅ Normal
+                        </button>
+                        <button onclick="pcapUI.labelCurrentPcap('anomaly')" class="label-btn anomaly">
+                            ⚠️ Anomaly
+                        </button>
+                    </div>
+                    <p class="helper" style="margin-top: 6px; font-size: 11px;">Label this capture to improve ML accuracy</p>
+                </div>
+
+                <div style="margin-top:20px">
+                    <h4>Capture Info</h4>
+                    <div class="pcap-stats" id="pcap-stats"></div>
+                </div>
+
+                <!-- ML Dashboard Section -->
+                <div class="ml-dashboard">
+                    <h3>🤖 Machine Learning</h3>
+                    
+                    <div class="ml-status" id="mlStatus">
+                        <p style="color: #7f8c8d; font-size: 0.9rem;">Loading ML status...</p>
+                    </div>
+                    
+                    <div class="ml-actions">
+                        <button onclick="mlDashboard.refreshStatus()" class="btn">🔄 Refresh</button>
+                        <button onclick="mlDashboard.viewSamples()" class="btn">📊 Samples</button>
+                        <button onclick="mlDashboard.viewModelInfo()" class="btn">🧠 Model</button>
+                        <button onclick="mlDashboard.trainModel()" class="btn">🎓 Train</button>
+                        <button onclick="mlDashboard.exportData()" class="btn">💾 Export</button>
+                    </div>
+                    
+                    <div id="mlDetails"></div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="content-header">
+                    <h2>Ask about the capture</h2>
+                </div>
+
+                <div class="chat-box">
+                    <div class="chat-messages" id="chat-messages"></div>
+
+                    <!-- Loading indicator -->
+                    <div class="loading-indicator" id="loading-indicator">
+                        <div class="spinner"></div>
+                        <span>Analyzing PCAP data...</span>
+                    </div>
+
+                    <form id="chat-form" style="display:flex; gap:8px;">
+                        <input id="chat-input" class="form-input" placeholder="e.g., Summarize traffic and top talkers" style="flex:1; padding:10px; border:2px solid #ecf0f1; border-radius:8px" />
+                        <button class="save-btn" type="submit" id="ask-btn">Ask</button>
+                    </form>
+                    <div class="helper" style="margin-top:8px">
+                        Backed by RouteLLM APIs. Configure your keys and models in your backend per the docs.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/network.js') }}"></script>
+    <script>
+    // ============================================================================
+    // PCAP UI Handler
+    // ============================================================================
+    class PcapUI {
+        constructor() {
+            this.currentPcapId = null;
+            this.currentFilename = null;
+            this.init();
+        }
+
+        init() {
+            // File input handlers
+            const fileInput = document.getElementById('pcap-file');
+            const chooseBtn = document.getElementById('choose-file-btn');
+            const uploadZone = document.getElementById('upload-zone');
+
+            // Click to choose file
+            chooseBtn.addEventListener('click', () => fileInput.click());
+            uploadZone.addEventListener('click', (e) => {
+                if (e.target === uploadZone || e.target.tagName === 'P' || e.target.tagName === 'H3') {
+                    fileInput.click();
+                }
+            });
+
+            // File selected
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    this.uploadFile(e.target.files[0]);
+                }
+            });
+
+            // Drag and drop
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    this.uploadFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            // Chat form handler
+            const chatForm = document.getElementById('chat-form');
+            chatForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.askQuestion();
+            });
+
+            // Logout/Clear button
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                if (confirm('Clear all data and reset?')) {
+                    this.clearAll();
+                }
+            });
+        }
+
+        async uploadFile(file) {
+            const statusDiv = document.getElementById('upload-status');
+            statusDiv.textContent = 'Uploading...';
+            statusDiv.style.color = '#3498db';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/pcap/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    this.currentPcapId = data.pcap_id;
+                    this.currentFilename = data.filename;
+                    
+                    statusDiv.textContent = `✅ Uploaded: ${data.filename}`;
+                    statusDiv.style.color = '#27ae60';
+
+                    // Display stats
+                    this.displayStats(data.stats);
+
+                    // Show label controls
+                    document.getElementById('label-controls').style.display = 'block';
+
+                    // Add welcome message
+                    this.addMessage('bot', `PCAP uploaded successfully! You can now ask questions about **${data.filename}**.\n\nExample questions:\n- Summarize the traffic\n- What protocols are present?\n- Show me SIP and RTP statistics`);
+
+                    // Refresh ML status
+                    if (window.mlDashboard) {
+                        mlDashboard.refreshStatus();
+                    }
+                } else {
+                    statusDiv.textContent = `❌ Error: ${data.error}`;
+                    statusDiv.style.color = '#e74c3c';
+                }
+            } catch (error) {
+                statusDiv.textContent = `❌ Upload failed: ${error.message}`;
+                statusDiv.style.color = '#e74c3c';
+                console.error('Upload error:', error);
+            }
+        }
+
+        displayStats(stats) {
+            const statsDiv = document.getElementById('pcap-stats');
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <h4>Format</h4>
+                    <p style="font-size: 18px; margin: 5px 0;">${stats.format || 'N/A'}</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Packets</h4>
+                    <p style="font-size: 18px; margin: 5px 0;">${stats.packet_count || 0}</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Total Bytes</h4>
+                    <p style="font-size: 18px; margin: 5px 0;">${(stats.total_bytes || 0).toLocaleString()}</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Duration</h4>
+                    <p style="font-size: 18px; margin: 5px 0;">${stats.duration_seconds || 0}s</p>
+                </div>
+                <div class="stat-card">
+                    <h4>SIP Packets</h4>
+                    <p style="font-size: 18px; margin: 5px 0; color: #3498db;">${stats.sip_packets || 0}</p>
+                </div>
+                <div class="stat-card">
+                    <h4>RTP Packets</h4>
+                    <p style="font-size: 18px; margin: 5px 0; color: #9b59b6;">${stats.rtp_packets || 0}</p>
+                </div>
+                ${stats.ml_alert ? `
+                <div class="stat-card" style="grid-column: 1 / -1; background: #fff3cd; border: 1px solid #ffc107;">
+                    <h4 style="color: #856404;">ML Alert</h4>
+                    <p style="font-size: 14px; margin: 5px 0; color: #856404;">${stats.ml_alert}</p>
+                </div>
+                ` : ''}
+                ${stats.note ? `
+                <div class="stat-card" style="grid-column: 1 / -1;">
+                    <h4>Note</h4>
+                    <p style="font-size: 14px; margin: 5px 0;">${stats.note}</p>
+                </div>
+                ` : ''}
+            `;
+        }
+
+        async askQuestion() {
+            if (!this.currentPcapId) {
+                alert('Please upload a PCAP file first!');
+                return;
+            }
+
+            const input = document.getElementById('chat-input');
+            const question = input.value.trim();
+
+            if (!question) {
+                return;
+            }
+
+            // Add user message
+            this.addMessage('user', question);
+            input.value = '';
+
+            // Show loading indicator
+            const loadingIndicator = document.getElementById('loading-indicator');
+            loadingIndicator.classList.add('active');
+
+            // Disable ask button
+            const askBtn = document.getElementById('ask-btn');
+            askBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/api/pcap/${this.currentPcapId}/route-llm`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Add bot response
+                    this.addMessage('bot', data.answer);
+
+                    // Update stats if ML analysis is present
+                    if (data.stats) {
+                        this.displayStats(data.stats);
+                    }
+                } else {
+                    this.addMessage('bot', `❌ Error: ${data.error}`);
+                }
+            } catch (error) {
+                this.addMessage('bot', `❌ Request failed: ${error.message}`);
+                console.error('Ask error:', error);
+            } finally {
+                // Hide loading indicator
+                loadingIndicator.classList.remove('active');
+                
+                // Re-enable ask button
+                askBtn.disabled = false;
+            }
+        }
+
+        addMessage(type, text) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${type}`;
+
+            if (type === 'bot') {
+                // Render markdown for bot messages
+                msgDiv.innerHTML = marked.parse(text);
+            } else {
+                msgDiv.textContent = text;
+            }
+
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        async labelCurrentPcap(label) {
+            if (!this.currentPcapId) {
+                alert('No PCAP loaded!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/pcap/${this.currentPcapId}/label`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ label })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`✅ PCAP labeled as "${label}"`);
+                    
+                    // Refresh ML status
+                    if (window.mlDashboard) {
+                        mlDashboard.refreshStatus();
+                    }
+                } else {
+                    alert(`❌ Error: ${data.error}`);
+                }
+            } catch (error) {
+                alert(`Error labeling PCAP: ${error.message}`);
+            }
+        }
+
+        clearAll() {
+            this.currentPcapId = null;
+            this.currentFilename = null;
+            document.getElementById('upload-status').textContent = '';
+            document.getElementById('pcap-stats').innerHTML = '';
+            document.getElementById('chat-messages').innerHTML = '';
+            document.getElementById('label-controls').style.display = 'none';
+            document.getElementById('pcap-file').value = '';
+        }
+    }
+
+    // ============================================================================
+    // ML Dashboard Class
+    // ============================================================================
+    class MLDashboard {
+        constructor() {
+            this.init();
+        }
+
+        init() {
+            // Auto-refresh status on page load
+            setTimeout(() => this.refreshStatus(), 500);
+        }
+
+        async refreshStatus() {
+            try {
+                const response = await fetch('/api/ml/status');
+                const data = await response.json();
+                
+                const statusDiv = document.getElementById('mlStatus');
+                statusDiv.innerHTML = `
+                    <div class="ml-stats-grid">
+                        <div class="stat-card">
+                            <h4>Model Status</h4>
+                            <p style="font-size: 20px; color: ${data.model.trained ? '#4CAF50' : '#ff9800'}; margin: 5px 0;">
+                                ${data.model.trained ? '✅ Trained' : '⚠️ Not Trained'}
+                            </p>
+                            ${data.model.last_modified ? `<small style="color: #7f8c8d;">${new Date(data.model.last_modified).toLocaleString()}</small>` : ''}
+                        </div>
+                        
+                        <div class="stat-card">
+                            <h4>Training Samples</h4>
+                            <p style="font-size: 20px; color: #2196F3; margin: 5px 0;">${data.training_samples}</p>
+                            <small style="color: #7f8c8d;">Min required: ${data.min_samples_required}</small>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <h4>Ready to Train</h4>
+                            <p style="font-size: 20px; margin: 5px 0;">${data.ready_to_train ? '✅ Yes' : '❌ No'}</p>
+                            <small style="color: #7f8c8d;">${data.ready_to_train ? 'You can train now!' : 'Collect more samples'}</small>
+                        </div>
+                    </div>
+                `;
+                
+                // Fetch and display statistics
+                const statsResponse = await fetch('/api/ml/statistics');
+                const statsData = await statsResponse.json();
+                
+                statusDiv.innerHTML += `
+                    <div style="margin-top: 15px; padding: 12px; background: white; border-radius: 5px;">
+                        <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #666;">Label Distribution</h4>
+                        <div style="display: flex; gap: 15px; font-size: 14px;">
+                            <div>Normal: <strong style="color: #4CAF50;">${statsData.label_distribution.normal}</strong></div>
+                            <div>Anomaly: <strong style="color: #ff9800;">${statsData.label_distribution.anomaly}</strong></div>
+                            <div>Other: <strong style="color: #999;">${statsData.label_distribution.other}</strong></div>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Error fetching ML status:', error);
+                document.getElementById('mlStatus').innerHTML = `<p style="color: #f44336; font-size: 0.9rem;">Error loading status: ${error.message}</p>`;
+            }
+        }
+
+        async viewSamples() {
+            try {
+                const response = await fetch('/api/ml/samples');
+                const data = await response.json();
+                
+                const detailsDiv = document.getElementById('mlDetails');
+                detailsDiv.innerHTML = `
+                    <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">Training Samples (${data.total_samples})</h4>
+                    <div class="ml-table-container">
+                        <table class="ml-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Label</th>
+                                    <th>Features</th>
+                                    <th>Size</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.samples.length > 0 ? data.samples.map(sample => `
+                                    <tr>
+                                        <td style="font-size: 12px;">${new Date(sample.timestamp).toLocaleString()}</td>
+                                        <td>
+                                            <span class="label-badge label-${sample.label}">
+                                                ${sample.label}
+                                            </span>
+                                        </td>
+                                        <td>${sample.feature_count}</td>
+                                        <td>${(sample.size_bytes / 1024).toFixed(1)} KB</td>
+                                        <td>
+                                            <button onclick="mlDashboard.viewSampleDetails('${sample.id}')" class="btn btn-small">View</button>
+                                            <button onclick="mlDashboard.deleteSample('${sample.id}')" class="btn btn-small btn-delete">Delete</button>
+                                        </td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="5" style="text-align: center; color: #999; padding: 20px;">No training samples yet</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error fetching samples:', error);
+                alert('Error loading samples: ' + error.message);
+            }
+        }
+
+        async viewSampleDetails(sampleId) {
+            try {
+                const response = await fetch(`/api/ml/samples/${sampleId}`);
+                const data = await response.json();
+                
+                const detailsDiv = document.getElementById('mlDetails');
+                detailsDiv.innerHTML = `
+                    <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">Sample Details: ${sampleId}</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px;">
+                        <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; max-height: 400px;">${JSON.stringify(data.data, null, 2)}</pre>
+                        <button onclick="mlDashboard.viewSamples()" class="btn" style="margin-top: 10px;">← Back to List</button>
+                    </div>
+                `;
+            } catch (error) {
+                alert('Error loading sample details: ' + error.message);
+            }
+        }
+
+        async deleteSample(sampleId) {
+            if (!confirm('Are you sure you want to delete this training sample?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/ml/samples/${sampleId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ Sample deleted successfully');
+                    this.viewSamples(); // Refresh list
+                    this.refreshStatus(); // Update counts
+                } else {
+                    alert('❌ Error deleting sample: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error deleting sample: ' + error.message);
+            }
+        }
+
+        async viewModelInfo() {
+            try {
+                const response = await fetch('/api/ml/model-info');
+                const data = await response.json();
+                
+                const detailsDiv = document.getElementById('mlDetails');
+                detailsDiv.innerHTML = `
+                    <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">Model Information</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px;">
+                        <pre style="background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; max-height: 400px;">${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                const detailsDiv = document.getElementById('mlDetails');
+                detailsDiv.innerHTML = `
+                    <h4 style="margin: 15px 0 10px 0; color: #2c3e50;">Model Information</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px;">
+                        <p style="color: #ff9800;">⚠️ Model not trained yet. Upload PCAPs and train the model first.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async trainModel() {
+            if (!confirm('Train/retrain the anomaly detection model? This may take a moment.')) {
+                return;
+            }
+            
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Training...';
+            
+            try {
+                const response = await fetch('/api/ml/train', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`✅ ${data.message}\nTraining samples: ${data.training_samples}`);
+                    this.refreshStatus();
+                } else {
+                    alert('❌ Training failed: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error training model: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🎓 Train';
+            }
+        }
+
+        async exportData() {
+            try {
+                const response = await fetch('/api/ml/export');
+                const data = await response.json();
+                
+                // Download as JSON file
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ml_training_data_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                alert(`✅ Exported ${data.total_samples} training samples`);
+            } catch (error) {
+                alert('Error exporting data: ' + error.message);
+            }
+        }
+    }
+
+    // ============================================================================
+    // Initialize
+    // ============================================================================
+    const pcapUI = new PcapUI();
+    const mlDashboard = new MLDashboard();
+    </script>
+</body>
+</html>

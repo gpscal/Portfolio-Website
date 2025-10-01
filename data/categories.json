@@ -34,5 +34,12 @@
     "description": "",
     "parentId": "4",
     "created_at": "2025-07-16T23:27:20.112068"
+  },
+  {
+    "id": "6",
+    "name": "Diagnose",
+    "description": "Diagnosis\n",
+    "parentId": "4",
+    "created_at": "2025-07-17T16:27:13.321754"
   }
 ]
