@@ -5,7 +5,7 @@ url = "https://llmapis.abacus.ai/chat/completions"
 headers = {"Authorization": "Bearer s2_740eb068e89f4eec9d7c8762e09db7a0", "Content-Type": "application/json"}
 stream = True # or False
 payload = {
-  "model": "route-llm",
+  "model": "gemini-2.5-pro",
   "messages": [
     {
       "role": "user",

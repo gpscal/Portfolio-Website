@@ -1,0 +1,244 @@
+{
+  "stats": {
+    "format": "pcap",
+    "packet_count": 21,
+    "total_bytes": 21504,
+    "duration_seconds": 80.61,
+    "sip_packets": 21,
+    "rtp_packets": 0,
+    "note": "SIP: 21, RTP: 0"
+  },
+  "packets": [
+    {
+      "index": 0,
+      "timestamp": 1760033127.873734,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 1,
+      "timestamp": 1760033128.375093,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 2,
+      "timestamp": 1760033129.375361,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 3,
+      "timestamp": 1760033131.375216,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 4,
+      "timestamp": 1760033135.375082,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 5,
+      "timestamp": 1760033143.375103,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 6,
+      "timestamp": 1760033159.375607,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 7,
+      "timestamp": 1760033163.316106,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 8,
+      "timestamp": 1760033163.819024,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 9,
+      "timestamp": 1760033164.819191,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 10,
+      "timestamp": 1760033166.818918,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 11,
+      "timestamp": 1760033170.819526,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 12,
+      "timestamp": 1760033176.981906,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 13,
+      "timestamp": 1760033177.482722,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 14,
+      "timestamp": 1760033178.483276,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 15,
+      "timestamp": 1760033178.820064,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 16,
+      "timestamp": 1760033180.48291,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 17,
+      "timestamp": 1760033184.483053,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 18,
+      "timestamp": 1760033192.483193,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 19,
+      "timestamp": 1760033194.819544,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    },
+    {
+      "index": 20,
+      "timestamp": 1760033208.482571,
+      "length": 1024,
+      "protocol": "SIP",
+      "src_ip": "192.168.3.240",
+      "dst_ip": "192.168.1.240",
+      "src_port": 5060,
+      "dst_port": 5060,
+      "sip_method": "INVITE"
+    }
+  ]
+}

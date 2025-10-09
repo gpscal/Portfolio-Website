@@ -625,6 +625,10 @@ def index():
 def pcap_page():
     return render_template('pcap.html')
 
+@app.route('/research')
+def research_page():
+    return render_template('research.html')
+
 
 @app.route('/api/pcap/upload', methods=['POST'])
 def upload_pcap():
@@ -665,7 +669,7 @@ def upload_pcap():
     }), 200
 
         
-def ask_routellm(query, context=None, model="route-llm", temperature=0.3, stream=False):
+def ask_routellm(query, context=None, model="route-llm", temperature=0.3, stream=True):
     """
     Send a chat request to Abacus RouteLLM API.
     Supports both streaming and non-streaming.
@@ -761,6 +765,68 @@ def analyze():
         return jsonify(result), 500
 
     return jsonify({"answer": result["answer"]})
+
+
+
+@app.route('/api/research', methods=['POST'])  
+def chat_api():  
+    """Handle chat requests with optional web browsing"""  
+    try:  
+        data = request.get_json()  
+        message = data.get('message', '')  
+        history = data.get('history', [])  
+        enable_Web_Search = data.get('enable_Web_Search', False)  
+          
+        # Build messages for RouteLLM  
+        messages = []  
+          
+        # Add system message with web search capability  
+        if enable_Web_Search:  
+            messages.append({  
+                'role': 'system',  
+                'content': 'You are a helpful AI assistant with access to current web information. Provide accurate, up-to-date answers.'  
+            })  
+        else:  
+            messages.append({  
+                'role': 'system',  
+                'content': 'You are a helpful AI assistant.'  
+            })  
+          
+        # Add conversation history  
+        for msg in history[-10:]:  # Last 10 messages  
+            messages.append(msg)  
+          
+        # Call RouteLLM API  
+        response = requests.post(  
+            ROUTELLM_ENDPOINT,  
+            headers={  
+                'Authorization': f'Bearer {ROUTELLM_API_KEY}',  
+                'Content-Type': 'application/json'  
+            },  
+            json={  
+                'model': ROUTELLM_MODEL,  
+                'messages': messages,  
+                'temperature': 0.7,  
+                'max_tokens': 2000  
+            },  
+            timeout=400  
+        )  
+          
+        if response.status_code == 200:  
+            result = response.json()  
+            return jsonify({  
+                'response': result['choices'][0]['message']['content'],  
+                'Web Search_used': enable_Web_Search,  
+                'sources': []  # Add actual sources if your API provides them  
+            })  
+        else:  
+            return jsonify({'error': f'API error: {response.status_code}'}), 500  
+    except requests.Timeout:
+        return jsonify({'error': 'Request timed out. Please try a simpler question.'}), 504
+          
+    except Exception as e:  
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/pcap/<pcap_id>/route-llm', methods=['POST'])
 def route_llm_handler(pcap_id):
