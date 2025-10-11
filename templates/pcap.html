@@ -4,167 +4,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PCAP Explorer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <!-- Add marked.js for markdown rendering -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-        }
-
-        .notes-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        .notes-header {
-            padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .notes-header h1 {
-            font-size: 1.5rem;
-            margin: 0;
-            color: #2c3e50;
-        }
-
-        .notes-content {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-        }
-
-        .sidebar {
-            width: 350px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            overflow-y: auto;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-        }
-
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-
+        /* page-specific tweaks on top of notes.css */
         .upload-zone {
             border: 2px dashed #3498db;
             padding: 24px;
             border-radius: 10px;
             background: rgba(52, 152, 219, 0.06);
             text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
         }
-
-        .upload-zone:hover {
-            background: rgba(52, 152, 219, 0.1);
-        }
-
         .upload-zone.dragover {
             background: rgba(52, 152, 219, 0.15);
-            border-color: #2980b9;
         }
-
-        .add-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-
-        .add-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
-        }
-
         .pcap-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 12px;
-            margin-top: 14px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 14px;
         }
-
-        .stat-card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 12px;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+        .stat-card { 
+            background: #fff; 
+            border-radius: 8px; 
+            padding: 12px; 
+            box-shadow: 0 1px 6px rgba(0,0,0,0.08); 
         }
-
         .stat-card h4 {
             margin: 0 0 10px 0;
             color: #666;
             font-size: 14px;
         }
-
-        .chat-box {
-            background: #fff;
-            border-radius: 10px;
-            padding: 16px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px;
-            border: 1px solid #ecf0f1;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-
-        .msg {
-            padding: 10px 12px;
-            margin: 8px 0;
-            border-radius: 8px;
-            line-height: 1.6;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .msg.user {
-            background: #e8f6ff;
-            margin-left: 40px;
-        }
-
+        .chat-box { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); height: 100%; display: flex; flex-direction: column; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 8px; border: 1px solid #ecf0f1; border-radius: 8px; margin-bottom: 10px; }
+        .msg { padding: 10px 12px; margin: 8px 0; border-radius: 8px; line-height: 1.6; }
+        .msg.user { background: #e8f6ff; }
         .msg.bot {
             background: #eef9f0;
             white-space: pre-wrap;
             word-wrap: break-word;
-            margin-right: 40px;
         }
-
+        /* Markdown formatting in bot messages */
+        .msg.bot h1, .msg.bot h2, .msg.bot h3 { margin: 12px 0 8px 0; color: #2c3e50; }
+        .msg.bot h1 { font-size: 1.3em; border-bottom: 2px solid #27ae60; padding-bottom: 4px; }
+        .msg.bot h2 { font-size: 1.2em; border-bottom: 1px solid #27ae60; padding-bottom: 3px; }
+        .msg.bot h3 { font-size: 1.1em; color: #27ae60; }
+        .msg.bot p { margin: 8px 0; }
+        .msg.bot ul, .msg.bot ol { margin: 8px 0; padding-left: 24px; }
+        .msg.bot li { margin: 4px 0; }
         .msg.bot code {
             background: #f4f4f4;
             padding: 2px 6px;
@@ -172,36 +57,33 @@
             font-family: 'Courier New', monospace;
             font-size: 0.9em;
         }
-
         .msg.bot pre {
-            background: #2c3e50;
-            color: #ecf0f1;
-            padding: 12px;
+            background: #f4f4f4;
+            padding: 10px;
             border-radius: 5px;
             overflow-x: auto;
             margin: 8px 0;
         }
-
         .msg.bot pre code {
             background: none;
             padding: 0;
-            color: inherit;
         }
-
-        .streaming-cursor {
-            display: inline-block;
-            width: 2px;
-            height: 1em;
-            background-color: #27ae60;
-            margin-left: 2px;
-            animation: blink 1s infinite;
+        .msg.bot strong { color: #2c3e50; font-weight: 600; }
+        .msg.bot em { font-style: italic; color: #555; }
+        .msg.bot blockquote {
+            border-left: 4px solid #27ae60;
+            padding-left: 12px;
+            margin: 8px 0;
+            color: #555;
         }
-
-        @keyframes blink {
-            0%, 49% { opacity: 1; }
-            50%, 100% { opacity: 0; }
+        .msg.bot hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 12px 0;
         }
+        .helper { color: #7f8c8d; font-size: 0.9rem; }
 
+        /* Loading indicator styles */
         .loading-indicator {
             display: none;
             padding: 12px;
@@ -212,11 +94,9 @@
             align-items: center;
             gap: 10px;
         }
-
         .loading-indicator.active {
             display: flex;
         }
-
         .spinner {
             width: 20px;
             height: 20px;
@@ -225,116 +105,81 @@
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        .save-btn {
-            padding: 12px 28px;
-            font-size: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        /* Layout improvements - remove wasted space */
+        .notes-header {
+            padding: 12px 24px;
+            min-height: auto;
         }
-
-        .save-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+        .notes-header h1 {
+            font-size: 1.5rem;
+            margin: 0;
         }
-
-        .save-btn:disabled {
-            background: #95a5a6;
-            cursor: not-allowed;
-            opacity: 0.6;
+        .notes-content {
+            height: calc(100vh - 60px);
+            padding: 0;
         }
-
-        .form-input {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #ecf0f1;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-
-        .helper {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-            margin-top: 8px;
-        }
-
-        .label-controls {
-            margin-top: 12px;
-            padding: 12px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            display: none;
-        }
-
-        .label-controls h4 {
-            font-size: 14px;
-            margin: 0 0 8px 0;
-            color: #2c3e50;
-        }
-
-        .label-buttons {
+        .main-content {
+            height: 100%;
             display: flex;
-            gap: 8px;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .content-header {
+            margin-bottom: 16px;
+        }
+        .content-header h2 {
+            font-size: 1.3rem;
+            margin: 0;
         }
 
-        .label-btn {
-            flex: 1;
-            padding: 8px;
-            font-size: 13px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            color: white;
-            transition: opacity 0.2s;
-        }
-
-        .label-btn:hover {
-            opacity: 0.9;
-        }
-
-        .label-btn.normal {
-            background: #4CAF50;
-        }
-
-        .label-btn.anomaly {
-            background: #ff9800;
-        }
-
-        .logout-btn {
-            padding: 8px 16px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .logout-btn:hover {
-            background: #c0392b;
-        }
+        .save-btn {  
+            padding: 12px 28px;  
+            font-size: 16px;  
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);  
+            color: white;  
+            border: none;  
+            border-radius: 8px;  
+            cursor: pointer;  
+            font-weight: 600;  
+            transition: all 0.3s ease;  
+            min-width: 100px;  
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);  
+        }  
+  
+        .save-btn:hover:not(:disabled) {  
+            transform: translateY(-2px);  
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);  
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);  
+        }  
+  
+        .save-btn:active:not(:disabled) {  
+            transform: translateY(0);  
+        }  
+  
+        .save-btn:disabled {  
+            background: #95a5a6;  
+            cursor: not-allowed;  
+            opacity: 0.6;  
+            box-shadow: none;  
+        }  
     </style>
 </head>
 <body>
+    <div class="network-bg">
+        <svg id="network-svg"></svg>
+    </div>
+
     <div class="notes-container">
         <header class="notes-header">
             <h1>PCAP Explorer</h1>
-            <button id="logout-btn" class="logout-btn">Clear</button>
+            <div class="header-actions">
+                <span class="user-info">Welcome, <span id="current-user">Guest</span></span>
+                <button id="logout-btn" class="logout-btn" title="Clear local data">Clear</button>
+            </div>
         </header>
 
         <div class="notes-content">
@@ -347,19 +192,6 @@
                     <div id="upload-status" class="helper" style="margin-top:8px"></div>
                 </div>
 
-                <div id="label-controls" class="label-controls">
-                    <h4>🏷️ Label for ML Training:</h4>
-                    <div class="label-buttons">
-                        <button onclick="pcapUI.labelCurrentPcap('normal')" class="label-btn normal">
-                            ✅ Normal
-                        </button>
-                        <button onclick="pcapUI.labelCurrentPcap('anomaly')" class="label-btn anomaly">
-                            ⚠️ Anomaly
-                        </button>
-                    </div>
-                    <p class="helper" style="margin-top: 6px; font-size: 11px;">Label this capture to improve ML accuracy</p>
-                </div>
-
                 <div style="margin-top:20px">
                     <h4>Capture Info</h4>
                     <div class="pcap-stats" id="pcap-stats"></div>
@@ -367,31 +199,36 @@
             </div>
 
             <div class="main-content">
-                <div style="margin-bottom: 16px;">
-                    <h2 style="margin: 0; color: #2c3e50;">Ask about the capture</h2>
+                <div class="content-header">
+                    <h2>Ask about the capture</h2>
                 </div>
 
                 <div class="chat-box">
                     <div class="chat-messages" id="chat-messages"></div>
 
+                    <!-- Loading indicator -->
                     <div class="loading-indicator" id="loading-indicator">
                         <div class="spinner"></div>
                         <span>Analyzing PCAP data...</span>
                     </div>
 
                     <form id="chat-form" style="display:flex; gap:8px;">
-                        <input id="chat-input" class="form-input" placeholder="e.g., Summarize traffic and top talkers" />
+                        <input id="chat-input" class="form-input" placeholder="e.g., Summarize traffic and top talkers" style="flex:1; padding:10px; border:2px solid #ecf0f1; border-radius:8px" />
                         <button class="save-btn" type="submit" id="ask-btn">Ask</button>
                     </form>
-                    <div class="helper">
-                        Backed by RouteLLM APIs. Supports streaming responses.
+                    <div class="helper" style="margin-top:8px">
+                        Backed by RouteLLM APIs. Configure your keys and models in your backend per the docs.
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='js/network.js') }}"></script>
     <script>
+    // ============================================================================
+    // PCAP UI Handler
+    // ============================================================================
     class PcapUI {
         constructor() {
             this.currentPcapId = null;
@@ -400,10 +237,12 @@
         }
 
         init() {
+            // File input handlers
             const fileInput = document.getElementById('pcap-file');
             const chooseBtn = document.getElementById('choose-file-btn');
             const uploadZone = document.getElementById('upload-zone');
 
+            // Click to choose file
             chooseBtn.addEventListener('click', () => fileInput.click());
             uploadZone.addEventListener('click', (e) => {
                 if (e.target === uploadZone || e.target.tagName === 'P' || e.target.tagName === 'H3') {
@@ -411,12 +250,14 @@
                 }
             });
 
+            // File selected
             fileInput.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
                     this.uploadFile(e.target.files[0]);
                 }
             });
 
+            // Drag and drop
             uploadZone.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 uploadZone.classList.add('dragover');
@@ -429,17 +270,20 @@
             uploadZone.addEventListener('drop', (e) => {
                 e.preventDefault();
                 uploadZone.classList.remove('dragover');
+                
                 if (e.dataTransfer.files.length > 0) {
                     this.uploadFile(e.dataTransfer.files[0]);
                 }
             });
 
+            // Chat form handler
             const chatForm = document.getElementById('chat-form');
             chatForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.askQuestion();
             });
 
+            // Logout/Clear button
             document.getElementById('logout-btn').addEventListener('click', () => {
                 if (confirm('Clear all data and reset?')) {
                     this.clearAll();
@@ -470,9 +314,10 @@
                     statusDiv.textContent = `✅ Uploaded: ${data.filename}`;
                     statusDiv.style.color = '#27ae60';
 
+                    // Display stats
                     this.displayStats(data.stats);
-                    document.getElementById('label-controls').style.display = 'block';
 
+                    // Add welcome message
                     this.addMessage('bot', `PCAP uploaded successfully! You can now ask questions about **${data.filename}**.\n\nExample questions:\n- Summarize the traffic\n- What protocols are present?\n- Show me SIP and RTP statistics`);
                 } else {
                     statusDiv.textContent = `❌ Error: ${data.error}`;
@@ -512,6 +357,12 @@
                     <h4>RTP Packets</h4>
                     <p style="font-size: 18px; margin: 5px 0; color: #9b59b6;">${stats.rtp_packets || 0}</p>
                 </div>
+                ${stats.note ? `
+                <div class="stat-card" style="grid-column: 1 / -1;">
+                    <h4>Note</h4>
+                    <p style="font-size: 14px; margin: 5px 0;">${stats.note}</p>
+                </div>
+                ` : ''}
             `;
         }
 
@@ -523,135 +374,120 @@
 
             const input = document.getElementById('chat-input');
             const question = input.value.trim();
+            
             if (!question) return;
 
+            // Add user message
             this.addMessage('user', question);
             input.value = '';
 
+            // Show loading indicator
             const loadingIndicator = document.getElementById('loading-indicator');
             loadingIndicator.classList.add('active');
-            const askBtn = document.getElementById('ask-btn');
-            askBtn.disabled = true;
-
-            const messagesDiv = document.getElementById('chat-messages');
-            const botMsgDiv = document.createElement('div');
-            botMsgDiv.className = 'msg bot';
-            botMsgDiv.innerHTML = '<span class="streaming-cursor"></span>';
-            messagesDiv.appendChild(botMsgDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
             try {
                 const response = await fetch(`/api/pcap/${this.currentPcapId}/route-llm`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ question })
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
 
+                // Handle streaming response
                 const reader = response.body.getReader();
                 const decoder = new TextDecoder();
-                let fullText = '';
                 let buffer = '';
+                let botMessageDiv = null;
 
                 while (true) {
-                    const { done, value } = await reader.read();
+                    const { value, done } = await reader.read();
                     
-                    if (done) {
-                        const cursor = botMsgDiv.querySelector('.streaming-cursor');
-                        if (cursor) cursor.remove();
-                        break;
-                    }
+                    if (done) break;
 
-                    const chunk = decoder.decode(value, { stream: true });
-                    buffer += chunk;
-
+                    buffer += decoder.decode(value, { stream: true });
+                    
                     const lines = buffer.split('\n');
-                    buffer = lines.pop() || '';
+                    buffer = lines.pop() || ''; // Keep last incomplete line
 
                     for (const line of lines) {
-                        if (line.trim() && line.startsWith('data: ')) {
+                        if (line.startsWith('data: ')) {
+                            const dataStr = line.slice(6);
+                            
+                            if (dataStr === '[DONE]') break;
+                            
                             try {
-                                const data = JSON.parse(line.slice(6));
+                                const data = JSON.parse(dataStr);
+                                
+                                if (data.error) {
+                                    this.addMessage('bot', `❌ Error: ${data.error}`);
+                                    break;
+                                }
                                 
                                 if (data.content) {
-                                    fullText += data.content;
-                                    botMsgDiv.innerHTML = marked.parse(fullText) + '<span class="streaming-cursor"></span>';
-                                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                                } else if (data.error) {
-                                    botMsgDiv.innerHTML = `❌ Error: ${data.error}`;
-                                    console.error('Stream error:', data.error);
+                                    if (!botMessageDiv) {
+                                        botMessageDiv = this.addMessage('bot', data.content);
+                                    } else {
+                                        // Append to existing message
+                                        botMessageDiv.innerHTML = marked.parse(botMessageDiv.textContent + data.content);
+                                        botMessageDiv.scrollIntoView({ behavior: 'smooth' });
+                                    }
                                 }
                             } catch (e) {
-                                console.error('Parse error:', e, 'Line:', line);
+                                console.error('Error parsing JSON:', e, 'Line:', line);
                             }
                         }
                     }
                 }
+
             } catch (error) {
-                console.error('Error:', error);
-                botMsgDiv.innerHTML = `❌ Request failed: ${error.message}`;
+                this.addMessage('bot', `❌ Error: ${error.message}`);
+                console.error('Ask question error:', error);
             } finally {
                 loadingIndicator.classList.remove('active');
-                askBtn.disabled = false;
-                input.focus();
             }
         }
 
-        addMessage(type, text) {
+        addMessage(sender, text) {
             const messagesDiv = document.getElementById('chat-messages');
             const msgDiv = document.createElement('div');
-            msgDiv.className = `msg ${type}`;
-
-            if (type === 'bot') {
+            msgDiv.className = `msg ${sender}`;
+            
+            if (sender === 'bot') {
+                // Use marked to render markdown
                 msgDiv.innerHTML = marked.parse(text);
             } else {
                 msgDiv.textContent = text;
             }
-
+            
             messagesDiv.appendChild(msgDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        async labelCurrentPcap(label) {
-            if (!this.currentPcapId) {
-                alert('No PCAP loaded!');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/pcap/${this.currentPcapId}/label`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ label })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    alert(`✅ PCAP labeled as "${label}"`);
-                } else {
-                    alert(`❌ Error: ${data.error}`);
-                }
-            } catch (error) {
-                alert(`Error labeling PCAP: ${error.message}`);
-            }
+            
+            return msgDiv;
         }
 
         clearAll() {
             this.currentPcapId = null;
             this.currentFilename = null;
+            
             document.getElementById('upload-status').textContent = '';
             document.getElementById('pcap-stats').innerHTML = '';
             document.getElementById('chat-messages').innerHTML = '';
-            document.getElementById('label-controls').style.display = 'none';
+            document.getElementById('chat-input').value = '';
+            
+            // Clear file input
             document.getElementById('pcap-file').value = '';
         }
     }
 
-    const pcapUI = new PcapUI();
+    // Initialize the UI when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        new PcapUI();
+    });
     </script>
 </body>
 </html>
