@@ -1,3 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #messages { border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+        #input { width: 70%; padding: 5px; }
+        button { padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Chat App</h1>
+    <div id="messages"></div>
+    <input type="text" id="input" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        let buffer = '';  // Add this outside the function for accumulation
+        
+        async function sendMessage() {
+            const input = document.getElementById('input');
+            const message = input.value.trim();
+            if (!message) return;
+
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<p><strong>You:</strong> ${message}</p>`;
+            input.value = '';
+
+            console.log('Starting fetch for message:', message);  // Log start
+
+            const response = await fetch('/api/test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+
+            if (!response.ok) {
+                console.error('Fetch failed:', response.status, response.statusText);
+                return;
+            }
+
+            console.log('Response received, starting stream read. Headers:', response.headers);  // Log headers
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let botMessage = document.createElement('p');
+            botMessage.innerHTML = '<strong>Bot:</strong> ';
+            const contentSpan = document.createElement('span');
+            botMessage.appendChild(contentSpan);
+            messagesDiv.appendChild(botMessage);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    console.log('Stream done. Final buffer:', buffer);  // Log end
+                    break;
+                }
+
+                const chunk = decoder.decode(value);
+                console.log('Raw chunk received:', chunk);  // Log raw incoming data
+
+                buffer += chunk;
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';  // Keep incomplete last line in buffer
+
+                console.log('Split lines:', lines.filter(l => l.trim()).map(l => l.substring(0, 50) + '...'));  // Log processed lines (truncated)
+
+                for (const line of lines) {
+                    if (line.trim() && line.startsWith('data: ')) {
+                        console.log('Processing SSE line:', line);  // Log each data line
+                        try {
+                            const data = JSON.parse(line.slice(6));
+                            console.log('Parsed data:', data);  // Log parsed JSON
+                            if (data.content) {
+                                contentSpan.textContent += data.content;
+                                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                                console.log('Appended content:', data.content);  // Log append
+                            } else if (data.error) {
+                                contentSpan.textContent += `Error: ${data.error}`;
+                                console.log('Error in stream:', data.error);
+                            }
+                        } catch (e) {
+                            console.error('Parse error on line:', line, 'Error:', e);  // Log parse fails
+                        }
+                    }
+                }
+            }
+            console.log('Stream fully processed.');
+        }
+
+        document.getElementById('input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
 
 
-<img src="{{ url_for('static', filename='images }}" alt="test">
+</body>
+</html>

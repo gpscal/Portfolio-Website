@@ -597,9 +597,9 @@ Provide a detailed, technical answer based on the PCAP data above."""
                     {'role': 'user', 'content': prompt}
                 ],
                 'temperature': 0.7,
-                'max_tokens': 1000
+                'max_tokens': 2000
             },
-            timeout=30
+            timeout=300
         )
         
         if response.status_code == 200:
@@ -620,7 +620,6 @@ Provide a detailed, technical answer based on the PCAP data above."""
 def index():
     return render_template('index.html')
 
-
 @app.route('/pcap')
 def pcap_page():
     return render_template('pcap.html')
@@ -628,6 +627,85 @@ def pcap_page():
 @app.route('/research')
 def research_page():
     return render_template('research.html')
+
+@app.route('/multisearch')
+def multi_search_query():
+    return render_template('multisearch.html')
+
+@app.route('/test')
+def test_page():
+    return render_template('test.html')
+
+
+@app.route('/api/test', methods=['POST', 'GET'])
+def chat():
+    if request.method == 'GET':
+        user_message = request.args.get('message', '')
+    else:
+        data = request.get_json()
+        user_message = data.get('message', '')
+
+    if not user_message:
+        return Response("No message provided", status=400)
+
+    def generate_response():
+        url = ROUTELLM_ENDPOINT
+        headers = {
+            "Authorization": f"Bearer {ROUTELLM_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": ROUTELLM_MODEL,
+            "messages": [{"role": "user", "content": user_message}],
+            "stream": True
+        }
+
+        try:
+            response = requests.post(url, headers=headers, json=payload, stream=True)
+            response.raise_for_status()
+            
+            # Use iter_content instead of iter_lines for true streaming
+            buffer = ""
+            for chunk in response.iter_content(chunk_size=1, decode_unicode=True):
+                if chunk:
+                    buffer += chunk
+                    
+                    # Process complete lines
+                    while "\n" in buffer:
+                        line, buffer = buffer.split("\n", 1)
+                        line = line.strip()
+                        
+                        if line.startswith("data: "):
+                            data_str = line[6:]  # Remove "data: " prefix
+                            
+                            if data_str == "[DONE]":
+                                return
+                            
+                            try:
+                                data = json.loads(data_str)
+                                if data.get("choices") and len(data["choices"]) > 0:
+                                    delta = data["choices"][0].get("delta", {})
+                                    content = delta.get("content", "")
+                                    
+                                    if content:
+                                        yield f"data: {json.dumps({'content': content})}\n\n"
+                            except json.JSONDecodeError:
+                                continue
+                                
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    return Response(
+        stream_with_context(generate_response()),
+        mimetype='text/event-stream',
+        headers={
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'X-Accel-Buffering': 'no'  # Important for nginx
+        }
+    )
+
+
 
 
 @app.route('/api/pcap/upload', methods=['POST'])
@@ -767,64 +845,112 @@ def analyze():
     return jsonify({"answer": result["answer"]})
 
 
+@app.route('/api/research', methods=['POST'])
+def chat_api():
+    """Handle chat requests with streaming and optional web browsing"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        history = data.get('history', [])
+        enable_web_search = data.get('enable_web_search', False)
 
-@app.route('/api/research', methods=['POST'])  
-def chat_api():  
-    """Handle chat requests with optional web browsing"""  
-    try:  
-        data = request.get_json()  
-        message = data.get('message', '')  
-        history = data.get('history', [])  
-        enable_Web_Search = data.get('enable_Web_Search', False)  
-          
-        # Build messages for RouteLLM  
-        messages = []  
-          
-        # Add system message with web search capability  
-        if enable_Web_Search:  
-            messages.append({  
-                'role': 'system',  
-                'content': 'You are a helpful AI assistant with access to current web information. Provide accurate, up-to-date answers.'  
-            })  
-        else:  
-            messages.append({  
-                'role': 'system',  
-                'content': 'You are a helpful AI assistant.'  
-            })  
-          
-        # Add conversation history  
-        for msg in history[-10:]:  # Last 10 messages  
-            messages.append(msg)  
-          
-        # Call RouteLLM API  
-        response = requests.post(  
-            ROUTELLM_ENDPOINT,  
-            headers={  
-                'Authorization': f'Bearer {ROUTELLM_API_KEY}',  
-                'Content-Type': 'application/json'  
-            },  
-            json={  
-                'model': ROUTELLM_MODEL,  
-                'messages': messages,  
-                'temperature': 0.7,  
-                'max_tokens': 2000  
-            },  
-            timeout=400  
-        )  
-          
-        if response.status_code == 200:  
-            result = response.json()  
-            return jsonify({  
-                'response': result['choices'][0]['message']['content'],  
-                'Web Search_used': enable_Web_Search,  
-                'sources': []  # Add actual sources if your API provides them  
-            })  
-        else:  
-            return jsonify({'error': f'API error: {response.status_code}'}), 500  
-    except requests.Timeout:
-        return jsonify({'error': 'Request timed out. Please try a simpler question.'}), 504
-          
-    except Exception as e:  
+        if not message:
+            return jsonify({'error': 'No message provided'}), 400
+
+        def generate_response():
+            try:
+                # Build messages for RouteLLM
+                messages = []
+
+                # Add system message with web search capability
+                if enable_web_search:
+                    messages.append({
+                        'role': 'system',
+                        'content': 'You are a helpful AI assistant with access to current web information. Provide accurate, up-to-date answers.'
+                    })
+                else:
+                    messages.append({
+                        'role': 'system',
+                        'content': 'You are a helpful AI assistant.'
+                    })
+
+                # Add conversation history (last 10 messages)
+                for msg in history[-10:]:
+                    if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
+                        messages.append(msg)
+
+                # Add current message
+                messages.append({
+                    'role': 'user',
+                    'content': message
+                })
+
+                # Call RouteLLM API with streaming
+                response = requests.post(
+                    ROUTELLM_ENDPOINT,
+                    headers={
+                        'Authorization': f'Bearer {ROUTELLM_API_KEY}',
+                        'Content-Type': 'application/json'
+                    },
+                    json={
+                        'model': ROUTELLM_MODEL,
+                        'messages': messages,
+                        'temperature': 0.5,
+                        'max_tokens': 2000,
+                        'stream': True
+                    },
+                    stream=True,
+                    timeout=400
+                )
+
+                response.raise_for_status()
+
+                # Stream the response using iter_content for true streaming
+                buffer = ""
+                for chunk in response.iter_content(chunk_size=None, decode_unicode=True):
+                    if chunk:
+                        buffer += chunk
+                        
+                        # Process complete lines
+                        while "\n" in buffer:
+                            line, buffer = buffer.split("\n", 1)
+                            line = line.strip()
+                            
+                            if line.startswith("data: "):
+                                data_str = line[6:]  # Remove "data: " prefix
+                                
+                                if data_str == "[DONE]":
+                                    return
+                                
+                                try:
+                                    data = json.loads(data_str)
+                                    if data.get("choices") and len(data["choices"]) > 0:
+                                        delta = data["choices"][0].get("delta", {})
+                                        content = delta.get("content", "")
+                                        
+                                        if content:
+                                            yield f"data: {json.dumps({'content': content})}\n\n"
+                                except json.JSONDecodeError:
+                                    continue
+
+            except requests.Timeout:
+                yield f"data: {json.dumps({'error': 'Request timed out. Please try a simpler question.'})}\n\n"
+            except Exception as e:
+                app.logger.exception("Error in streaming response")
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+        return Response(
+            stream_with_context(generate_response()),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no'
+            }
+        )
+
+    except Exception as e:
+        app.logger.exception("Error in chat_api")
         return jsonify({'error': str(e)}), 500
 
 

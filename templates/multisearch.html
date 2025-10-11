@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Search Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        #searchInput {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #searchInput:focus {
+            border-color: #667eea;
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .search-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .engine-selector {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .engine-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .engine-checkbox input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .dashboard {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 200px);
+        }
+
+        .widgets-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 10px;
+        }
+
+        .widget {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .widget.minimized {
+            grid-column: span 1;
+            max-height: 60px;
+        }
+
+        .widget.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 1000;
+            border-radius: 0;
+            grid-column: 1 / -1;
+        }
+
+        .widget-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move;
+        }
+
+        .widget-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .widget-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .widget-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+
+        .widget-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .widget-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .widget.minimized .widget-content {
+            display: none;
+        }
+
+        .widget-iframe {
+            width: 100%;
+            height: 1500px;
+            border: none;
+            flex: 1;
+        }
+
+        .widget.fullscreen .widget-iframe {
+            height: calc(100vh - 60px);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .no-results-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .no-results h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .no-results p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f0f0f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .widgets-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .engine-selector {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>🔍 Multi-Search Dashboard</h1>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Enter your search query..." />
+                <button class="search-btn" onclick="performSearch()">Search</button>
+            </div>
+            <div class="engine-selector">
+                <label class="engine-checkbox">
+                    <input type="checkbox" id="google" checked>
+                    <span>🌐 Google</span>
+                </label>
+                <label class="engine-checkbox">
+                    <input type="checkbox" id="bing" checked>
+                    <span>🔷 Bing</span>
+                </label>
+                <label class="engine-checkbox">
+                    <input type="checkbox" id="duckduckgo" checked>
+                    <span>🦆 DuckDuckGo</span>
+                </label>
+                <label class="engine-checkbox">
+                    <input type="checkbox" id="yahoo">
+                    <span>🟣 Yahoo</span>
+                </label>
+                <label class="engine-checkbox">
+                    <input type="checkbox" id="ecosia">
+                    <span>🌱 Ecosia</span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div id="noResults" class="no-results">
+            <div class="no-results-icon">🔎</div>
+            <h2>Ready to Search</h2>
+            <p>Enter a query above and select search engines to get started</p>
+        </div>
+        <div id="widgetsContainer" class="widgets-container" style="display: none;"></div>
+    </div>
+
+    <script>
+        const searchEngines = {
+            google: {
+                name: 'Google',
+                icon: '🌐',
+                url: 'https://www.google.com/search?q=',
+                iframeUrl: 'https://www.google.com/search?igu=1&q='
+            },
+            bing: {
+                name: 'Bing',
+                icon: '🔷',
+                url: 'https://www.bing.com/search?q='
+            },
+            duckduckgo: {
+                name: 'DuckDuckGo',
+                icon: '🦆',
+                url: 'https://duckduckgo.com/?q='
+            },
+            yahoo: {
+                name: 'Yahoo',
+                icon: '🟣',
+                url: 'https://search.yahoo.com/search?p='
+            },
+            ecosia: {
+                name: 'Ecosia',
+                icon: '🌱',
+                url: 'https://www.ecosia.org/search?q='
+            }
+        };
+
+        let widgets = [];
+
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+
+            const container = document.getElementById('widgetsContainer');
+            const noResults = document.getElementById('noResults');
+            
+            container.innerHTML = '';
+            widgets = [];
+
+            let hasSelected = false;
+
+            Object.keys(searchEngines).forEach(engineId => {
+                const checkbox = document.getElementById(engineId);
+                if (checkbox && checkbox.checked) {
+                    hasSelected = true;
+                    createWidget(engineId, query);
+                }
+            });
+
+            if (!hasSelected) {
+                alert('Please select at least one search engine');
+                return;
+            }
+
+            noResults.style.display = 'none';
+            container.style.display = 'grid';
+        }
+
+        function createWidget(engineId, query) {
+            const engine = searchEngines[engineId];
+            const searchUrl = (engine.iframeUrl || engine.url) + encodeURIComponent(query);
+            
+            const widget = {
+                id: `widget-${Date.now()}-${Math.random()}`,
+                engineId: engineId,
+                minimized: false,
+                fullscreen: false
+            };
+            
+            widgets.push(widget);
+
+            const widgetHtml = `
+                <div class="widget" id="${widget.id}">
+                    <div class="widget-header">
+                        <div class="widget-title">
+                            <span>${engine.icon}</span>
+                            <span>${engine.name}</span>
+                        </div>
+                        <div class="widget-controls">
+                            <button class="widget-btn" onclick="toggleMinimize('${widget.id}')" title="Minimize">−</button>
+                            <button class="widget-btn" onclick="toggleFullscreen('${widget.id}')" title="Fullscreen">⛶</button>
+                            <button class="widget-btn" onclick="refreshWidget('${widget.id}', '${engineId}', '${query}')" title="Refresh">↻</button>
+                            <button class="widget-btn" onclick="closeWidget('${widget.id}')" title="Close">✕</button>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <span>Loading ${engine.name} results...</span>
+                        </div>
+                        <iframe class="widget-iframe" src="${searchUrl}" style="display: none;" onload="hideLoading('${widget.id}')"></iframe>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('widgetsContainer').insertAdjacentHTML('beforeend', widgetHtml);
+        }
+
+        function hideLoading(widgetId) {
+            const widget = document.getElementById(widgetId);
+            if (widget) {
+                const loading = widget.querySelector('.loading');
+                const iframe = widget.querySelector('.widget-iframe');
+                if (loading) loading.style.display = 'none';
+                if (iframe) iframe.style.display = 'block';
+            }
+        }
+
+        function toggleMinimize(widgetId) {
+            const widget = document.getElementById(widgetId);
+            const widgetData = widgets.find(w => w.id === widgetId);
+            
+            if (widget && widgetData) {
+                widgetData.minimized = !widgetData.minimized;
+                widget.classList.toggle('minimized');
+                
+                const btn = widget.querySelector('.widget-controls button:first-child');
+                btn.textContent = widgetData.minimized ? '□' : '−';
+                btn.title = widgetData.minimized ? 'Restore' : 'Minimize';
+            }
+        }
+
+        function toggleFullscreen(widgetId) {
+            const widget = document.getElementById(widgetId);
+            const widgetData = widgets.find(w => w.id === widgetId);
+            
+            if (widget && widgetData) {
+                widgetData.fullscreen = !widgetData.fullscreen;
+                widget.classList.toggle('fullscreen');
+                
+                const btn = widget.querySelectorAll('.widget-controls button')[1];
+                btn.textContent = widgetData.fullscreen ? '⊗' : '⛶';
+                btn.title = widgetData.fullscreen ? 'Exit Fullscreen' : 'Fullscreen';
+            }
+        }
+
+        function refreshWidget(widgetId, engineId, query) {
+            const widget = document.getElementById(widgetId);
+            if (widget) {
+                const iframe = widget.querySelector('.widget-iframe');
+                const loading = widget.querySelector('.loading');
+                
+                if (iframe && loading) {
+                    iframe.style.display = 'none';
+                    loading.style.display = 'flex';
+                    
+                    const engine = searchEngines[engineId];
+                    const searchUrl = (engine.iframeUrl || engine.url) + encodeURIComponent(query);
+                    iframe.src = searchUrl;
+                }
+            }
+        }
+
+        function closeWidget(widgetId) {
+            const widget = document.getElementById(widgetId);
+            if (widget) {
+                widget.style.animation = 'fadeOut 0.3s';
+                setTimeout(() => {
+                    widget.remove();
+                    widgets = widgets.filter(w => w.id !== widgetId);
+                    
+                    if (widgets.length === 0) {
+                        document.getElementById('noResults').style.display = 'block';
+                        document.getElementById('widgetsContainer').style.display = 'none';
+                    }
+                }, 300);
+            }
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    </script>
+
+    <style>
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+    </style>
+</body>
+</html>
