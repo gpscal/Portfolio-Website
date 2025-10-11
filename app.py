@@ -32,7 +32,9 @@ for directory in [UPLOAD_DIR, METADATA_DIR, ML_TRAINING_DATA_DIR, ML_MODELS_DIR]
 ROUTELLM_API_KEY = os.getenv('ROUTELLM_API_KEY')
 ROUTELLM_MODEL = os.getenv('ROUTELLM_MODEL')
 ROUTELLM_ENDPOINT = os.getenv('ROUTELLM_ENDPOINT')
-
+# Add OpenAI configuration at the top of app.py - new API
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-4o')
 
 # ============================================================================
 # UTILITY FUNCTIONS
@@ -596,7 +598,7 @@ Provide a detailed, technical answer based on the PCAP data above."""
                     {'role': 'system', 'content': 'You are a network analysis expert specializing in VoIP and packet analysis.'},
                     {'role': 'user', 'content': prompt}
                 ],
-                'temperature': 0.7,
+                'temperature': 0.1,
                 'max_tokens': 2000
             },
             timeout=300
@@ -635,6 +637,239 @@ def multi_search_query():
 @app.route('/test')
 def test_page():
     return render_template('test.html')
+
+@app.route('/dual-research')
+def dual_research_page():
+    return render_template('dual_research.html')
+
+# Add this new endpoint for dual LLM streaming
+@app.route('/api/dual-research', methods=['POST'])
+def dual_research_api():
+    """Handle dual LLM requests with streaming from both OpenAI and RouteLLM"""
+    try:
+        data = request.get_json()
+        message = data.get('message', '')
+        history = data.get('history', [])
+        enable_web_search = data.get('enable_web_search', False)
+
+        if not message:
+            return jsonify({'error': 'No message provided'}), 400
+
+        def generate_dual_responses():
+            import threading
+            from queue import Queue
+            
+            openai_queue = Queue()
+            routellm_queue = Queue()
+            
+            def openai_stream():
+                try:
+                    # Build messages for OpenAI
+                    messages = []
+                    
+                    # Add system message
+                    if enable_web_search:
+                        messages.append({
+                            'role': 'system', 
+                            'content': 'You are a helpful AI assistant. Provide accurate, detailed answers.'
+                        })
+                    else:
+                        messages.append({
+                            'role': 'system',
+                            'content': 'You are a helpful AI assistant.'
+                        })
+
+                    # Add conversation history
+                    for msg in history[-6:]:  # Use slightly less history for dual
+                        if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
+                            messages.append(msg)
+
+                    # Add current message
+                    messages.append({'role': 'user', 'content': message})
+
+                    # Call OpenAI API with streaming
+                    response = requests.post(
+                        'https://api.openai.com/v1/chat/completions',
+                        headers={
+                            'Authorization': f'Bearer {OPENAI_API_KEY}',
+                            'Content-Type': 'application/json'
+                        },
+                        json={
+                            'model': OPENAI_MODEL,
+                            'messages': messages,
+                            'temperature': 0.1,
+                            'max_tokens': 1500,
+                            'stream': True
+                        },
+                        stream=True,
+                        timeout=300
+                    )
+                    
+                    response.raise_for_status()
+                    
+                    full_content = ""
+                    for line in response.iter_lines():
+                        if line:
+                            line = line.decode('utf-8')
+                            if line.startswith('data: '):
+                                data_str = line[6:]
+                                if data_str == '[DONE]':
+                                    openai_queue.put({'type': 'done'})
+                                    break
+                                try:
+                                    data = json.loads(data_str)
+                                    if data.get('choices') and len(data['choices']) > 0:
+                                        delta = data['choices'][0].get('delta', {})
+                                        content = delta.get('content', '')
+                                        if content:
+                                            full_content += content
+                                            openai_queue.put({
+                                                'type': 'content',
+                                                'content': content,
+                                                'provider': 'openai'
+                                            })
+                                except json.JSONDecodeError:
+                                    continue
+                    
+                except Exception as e:
+                    openai_queue.put({
+                        'type': 'error',
+                        'error': f'OpenAI Error: {str(e)}',
+                        'provider': 'openai'
+                    })
+            
+            def routellm_stream():
+                try:
+                    # Build messages for RouteLLM
+                    messages = []
+                    
+                    if enable_web_search:
+                        messages.append({
+                            'role': 'system',
+                            'content': 'You are a helpful AI assistant with access to current web information.'
+                        })
+                    else:
+                        messages.append({
+                            'role': 'system', 
+                            'content': 'You are a helpful AI assistant.'
+                        })
+
+                    for msg in history[-6:]:
+                        if isinstance(msg, dict) and 'role' in msg and 'content' in msg:
+                            messages.append(msg)
+
+                    messages.append({'role': 'user', 'content': message})
+
+                    # Call RouteLLM API
+                    response = requests.post(
+                        ROUTELLM_ENDPOINT,
+                        headers={
+                            'Authorization': f'Bearer {ROUTELLM_API_KEY}',
+                            'Content-Type': 'application/json'
+                        },
+                        json={
+                            'model': ROUTELLM_MODEL,
+                            'messages': messages,
+                            'temperature': 0.1,
+                            'max_tokens': 1500,
+                            'stream': True
+                        },
+                        stream=True,
+                        timeout=300
+                    )
+                    
+                    response.raise_for_status()
+                    
+                    buffer = ""
+                    for chunk in response.iter_content(chunk_size=None, decode_unicode=True):
+                        if chunk:
+                            buffer += chunk
+                            while "\n" in buffer:
+                                line, buffer = buffer.split("\n", 1)
+                                line = line.strip()
+                                if line.startswith("data: "):
+                                    data_str = line[6:]
+                                    if data_str == "[DONE]":
+                                        routellm_queue.put({'type': 'done'})
+                                        return
+                                    try:
+                                        data = json.loads(data_str)
+                                        if data.get("choices") and len(data["choices"]) > 0:
+                                            delta = data["choices"][0].get("delta", {})
+                                            content = delta.get("content", "")
+                                            if content:
+                                                routellm_queue.put({
+                                                    'type': 'content', 
+                                                    'content': content,
+                                                    'provider': 'routellm'
+                                                })
+                                    except json.JSONDecodeError:
+                                        continue
+                
+                except Exception as e:
+                    routellm_queue.put({
+                        'type': 'error',
+                        'error': f'RouteLLM Error: {str(e)}',
+                        'provider': 'routellm'
+                    })
+            
+            # Start both threads
+            openai_thread = threading.Thread(target=openai_stream)
+            routellm_thread = threading.Thread(target=routellm_stream)
+            
+            openai_thread.daemon = True
+            routellm_thread.daemon = True
+            
+            openai_thread.start()
+            routellm_thread.start()
+            
+            # Track completion
+            openai_done = False
+            routellm_done = False
+            
+            while not (openai_done and routellm_done):
+                # Check OpenAI queue
+                try:
+                    openai_data = openai_queue.get(timeout=0.1)
+                    if openai_data['type'] == 'done':
+                        openai_done = True
+                        yield f"data: {json.dumps({'provider': 'openai', 'done': True})}\n\n"
+                    elif openai_data['type'] == 'content':
+                        yield f"data: {json.dumps({'provider': 'openai', 'content': openai_data['content']})}\n\n"
+                    elif openai_data['type'] == 'error':
+                        yield f"data: {json.dumps({'provider': 'openai', 'error': openai_data['error']})}\n\n"
+                        openai_done = True
+                except:
+                    pass
+                
+                # Check RouteLLM queue  
+                try:
+                    routellm_data = routellm_queue.get(timeout=0.1)
+                    if routellm_data['type'] == 'done':
+                        routellm_done = True
+                        yield f"data: {json.dumps({'provider': 'routellm', 'done': True})}\n\n"
+                    elif routellm_data['type'] == 'content':
+                        yield f"data: {json.dumps({'provider': 'routellm', 'content': routellm_data['content']})}\n\n"
+                    elif routellm_data['type'] == 'error':
+                        yield f"data: {json.dumps({'provider': 'routellm', 'error': routellm_data['error']})}\n\n"
+                        routellm_done = True
+                except:
+                    pass
+
+        return Response(
+            stream_with_context(generate_dual_responses()),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'X-Accel-Buffering': 'no'
+            }
+        )
+
+    except Exception as e:
+        app.logger.exception("Error in dual research API")
+        return jsonify({'error': str(e)}), 500
+
 
 
 @app.route('/api/test', methods=['POST', 'GET'])

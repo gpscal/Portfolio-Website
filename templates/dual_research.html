@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <title>Dual LLM Research - FortiResearch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .network-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .dual-chat-container {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .chat-header {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px 15px 0 0;
+            padding: 20px 30px;
+            backdrop-filter: blur(0px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .back-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .chat-columns {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .chat-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-column:last-child {
+            border-right: none;
+        }
+
+        .column-header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .provider-name {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .provider-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .openai-badge {
+            background: linear-gradient(135deg, #74aa9c, #4a8c7c);
+            color: white;
+        }
+
+        .routellm-badge {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .chat-messages {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(0px);
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            flex-shrink: 0;
+            font-size: 0.7rem;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+
+        .message-content {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: rgba(52, 152, 219, 0.08);
+            border: 1px solid rgba(52, 152, 219, 0.15);
+            line-height: 1.5;
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        .message.user .message-content {
+            background: rgba(39, 174, 96, 0.1);
+            border: 1px solid rgba(39, 174, 96, 0.2);
+        }
+
+        .message-content a {
+            color: #3498db;
+            text-decoration: underline;
+        }
+
+        .message-content code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+
+        .message-content pre {
+            background: rgba(0, 0, 0, 0.8);
+            color: #f8f8f2;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 8px 0;
+            font-family: 'Courier New', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .message-content pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+        .typing-indicator {
+            display: none;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #3498db;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .chat-input-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0 0 15px 15px;
+            padding: 20px 30px;
+            backdrop-filter: blur(1px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid rgba(52, 152, 219, 0.7);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .send-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .streaming-cursor {
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background-color: #3498db;
+            margin-left: 2px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 49% {
+                opacity: 1;
+            }
+            50%, 100% {
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chat-columns {
+                flex-direction: column;
+            }
+            
+            .chat-column {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            }
+            
+            .column-header {
+                padding: 12px 20px;
+            }
+            
+            .chat-messages {
+                padding: 15px;
+            }
+            
+            .message-content {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="network-bg">
+        <svg id="bu_network-svg"></svg>
+    </div>
+
+    <div class="dual-chat-container">
+        <div class="chat-header">
+            <div class="chat-title">Dual LLM Research</div>
+            <a href="/" class="back-btn">← Home</a>
+        </div>
+
+        <div class="chat-columns">
+            <!-- OpenAI Column -->
+            <div class="chat-column">
+                <div class="column-header">
+                    <div class="provider-name">OpenAI</div>
+                    <div class="provider-badge openai-badge">GPT-4</div>
+                </div>
+                <div class="chat-messages" id="openaiChatMessages">
+                    <div class="message">
+                        <div class="message-avatar">AI</div>
+                        <div class="message-content">
+                            Hello! I'm OpenAI. I'll provide responses alongside RouteLLM so you can compare our answers.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RouteLLM Column -->
+            <div class="chat-column">
+                <div class="column-header">
+                    <div class="provider-name">RouteLLM</div>
+                    <div class="provider-badge routellm-badge">FortiResearch</div>
+                </div>
+                <div class="chat-messages" id="routellmChatMessages">
+                    <div class="message">
+                        <div class="message-avatar">AI</div>
+                        <div class="message-content">
+                            Hello! I'm RouteLLM. I'll provide responses alongside OpenAI so you can compare our approaches.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea
+                    id="chatInput"
+                    class="chat-input"
+                    placeholder="Type your message... Both OpenAI and RouteLLM will respond simultaneously!"
+                    rows="1"
+                ></textarea>
+                <button id="sendBtn" class="send-btn">Send to Both</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const openaiChatMessages = document.getElementById('openaiChatMessages');
+        const routellmChatMessages = document.getElementById('routellmChatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        let openaiHistory = [];
+        let routellmHistory = [];
+        let isStreaming = false;
+
+        // Auto-resize textarea
+        chatInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        // Send message on Enter (Shift+Enter for new line)
+        chatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        sendBtn.addEventListener('click', sendMessage);
+
+        function addMessage(chatMessagesElement, content, isUser = false, provider = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : ''}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = isUser ? 'You' : 'AI';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = formatContent(content);
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+
+            chatMessagesElement.appendChild(messageDiv);
+            chatMessagesElement.scrollTop = chatMessagesElement.scrollHeight;
+
+            return contentDiv;
+        }
+
+        function createStreamingMessage(chatMessagesElement, provider) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = 'AI';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = `<span class="streaming-cursor"></span>`;
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+
+            chatMessagesElement.appendChild(messageDiv);
+            chatMessagesElement.scrollTop = chatMessagesElement.scrollHeight;
+
+            return contentDiv;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatContent(text) {
+            const codeBlocks = [];
+            text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
+                const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+                codeBlocks.push({
+                    language: language || 'plaintext',
+                    code: code.trim()
+                });
+                return placeholder;
+            });
+            
+            const inlineCodes = [];
+            text = text.replace(/`([^`]+)`/g, (match, code) => {
+                const placeholder = `__INLINE_CODE_${inlineCodes.length}__`;
+                inlineCodes.push(code);
+                return placeholder;
+            });
+            
+            text = escapeHtml(text);
+            text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            text = text.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            text = text.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            text = text.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            text = text.replace(/\n/g, '<br>');
+            
+            inlineCodes.forEach((code, index) => {
+                text = text.replace(
+                    `__INLINE_CODE_${index}__`,
+                    `<code>${escapeHtml(code)}</code>`
+                );
+            });
+            
+            codeBlocks.forEach((block, index) => {
+                const escapedCode = escapeHtml(block.code);
+                text = text.replace(
+                    `__CODE_BLOCK_${index}__`,
+                    `<pre><code class="language-${block.language}">${escapedCode}</code></pre>`
+                );
+            });
+            
+            return text;
+        }
+
+        async function sendMessage() {
+            const message = chatInput.value.trim();
+            if (!message || isStreaming) return;
+
+            // Add user message to both columns
+            addMessage(openaiChatMessages, message, true);
+            addMessage(routellmChatMessages, message, true);
+
+            // Add to histories
+            openaiHistory.push({ role: 'user', content: message });
+            routellmHistory.push({ role: 'user', content: message });
+
+            // Clear input
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+
+            // Disable send button
+            sendBtn.disabled = true;
+            isStreaming = true;
+
+            // Create streaming messages
+            const openaiStreamingContent = createStreamingMessage(openaiChatMessages, 'openai');
+            const routellmStreamingContent = createStreamingMessage(routellmChatMessages, 'routellm');
+
+            let openaiFullResponse = '';
+            let routellmFullResponse = '';
+
+            try {
+                const response = await fetch('/api/dual-research', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        history: [...openaiHistory, ...routellmHistory].slice(-10),
+                        enable_web_search: /latest|current|recent|today|news|2024|2025/i.test(message)
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.trim() && line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                
+                                if (data.provider === 'openai' && data.content) {
+                                    openaiFullResponse += data.content;
+                                    const formattedText = formatContent(openaiFullResponse);
+                                    openaiStreamingContent.innerHTML = formattedText + '<span class="streaming-cursor"></span>';
+                                    highlightCode(openaiStreamingContent);
+                                }
+                                else if (data.provider === 'routellm' && data.content) {
+                                    routellmFullResponse += data.content;
+                                    const formattedText = formatContent(routellmFullResponse);
+                                    routellmStreamingContent.innerHTML = formattedText + '<span class="streaming-cursor"></span>';
+                                    highlightCode(routellmStreamingContent);
+                                }
+                                else if (data.error) {
+                                    const errorContent = data.provider === 'openai' ? openaiStreamingContent : routellmStreamingContent;
+                                    errorContent.innerHTML = `Error: ${data.error}`;
+                                }
+                                else if (data.done) {
+                                    const doneContent = data.provider === 'openai' ? openaiStreamingContent : routellmStreamingContent;
+                                    const cursor = doneContent.querySelector('.streaming-cursor');
+                                    if (cursor) cursor.remove();
+                                }
+
+                                // Auto-scroll both containers
+                                openaiChatMessages.scrollTop = openaiChatMessages.scrollHeight;
+                                routellmChatMessages.scrollTop = routellmChatMessages.scrollHeight;
+                            } catch (e) {
+                                console.error('Parse error:', e, 'Line:', line);
+                            }
+                        }
+                    }
+                }
+
+                // Add to conversation histories
+                if (openaiFullResponse) {
+                    openaiHistory.push({ role: 'assistant', content: openaiFullResponse });
+                }
+                if (routellmFullResponse) {
+                    routellmHistory.push({ role: 'assistant', content: routellmFullResponse });
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                openaiStreamingContent.innerHTML = 'Sorry, there was an error processing your request.';
+                routellmStreamingContent.innerHTML = 'Sorry, there was an error processing your request.';
+            } finally {
+                sendBtn.disabled = false;
+                isStreaming = false;
+                chatInput.focus();
+            }
+        }
+
+        function highlightCode(container) {
+            container.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+        }
+
+        // Focus input on load
+        chatInput.focus();
+
+        // Simple network background animation
+        const svg = document.getElementById('network-svg');
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        svg.setAttribute('width', width);
+        svg.setAttribute('height', height);
+
+        for (let i = 0; i < 20; i++) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', Math.random() * width);
+            circle.setAttribute('cy', Math.random() * height);
+            circle.setAttribute('r', Math.random() * 3 + 1);
+            circle.setAttribute('fill', `rgba(52, 152, 219, ${Math.random() * 0.3 + 0.1})`);
+            
+            const animateX = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+            animateX.setAttribute('attributeName', 'cx');
+            animateX.setAttribute('values', `${circle.getAttribute('cx')};${Math.random() * width};${circle.getAttribute('cx')}`);
+            animateX.setAttribute('dur', `${Math.random() * 20 + 10}s`);
+            animateX.setAttribute('repeatCount', 'indefinite');
+            
+            const animateY = document.createElementNS('http://www.w3.org/2000/svg', 'animate');
+            animateY.setAttribute('attributeName', 'cy');
+            animateY.setAttribute('values', `${circle.getAttribute('cy')};${Math.random() * height};${circle.getAttribute('cy')}`);
+            animateY.setAttribute('dur', `${Math.random() * 20 + 10}s`);
+            animateY.setAttribute('repeatCount', 'indefinite');
+            
+            circle.appendChild(animateX);
+            circle.appendChild(animateY);
+            svg.appendChild(circle);
+        }
+    </script>
+</body>
+</html>
