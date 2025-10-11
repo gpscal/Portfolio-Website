@@ -301,10 +301,6 @@ def research_page():
 def multi_search_query():
     return render_template('multisearch.html')
 
-@app.route('/test')
-def test_page():
-    return render_template('test.html')
-
 @app.route('/dual-research')
 def dual_research_page():
     return render_template('dual_research.html')
@@ -365,7 +361,7 @@ def dual_research_api():
                             'model': OPENAI_MODEL,
                             'messages': messages,
                             'temperature': 0.1,
-                            'max_tokens': 1500,
+                            'max_tokens': 2500,
                             'stream': True
                         },
                         stream=True,
@@ -438,7 +434,7 @@ def dual_research_api():
                             'model': ROUTELLM_MODEL,
                             'messages': messages,
                             'temperature': 0.1,
-                            'max_tokens': 1500,
+                            'max_tokens': 2500,
                             'stream': True
                         },
                         stream=True,
@@ -537,73 +533,6 @@ def dual_research_api():
         app.logger.exception("Error in dual research API")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/test', methods=['POST', 'GET'])
-def chat():
-    if request.method == 'GET':
-        user_message = request.args.get('message', '')
-    else:
-        data = request.get_json()
-        user_message = data.get('message', '')
-
-    if not user_message:
-        return Response("No message provided", status=400)
-
-    def generate_response():
-        url = ROUTELLM_ENDPOINT
-        headers = {
-            "Authorization": f"Bearer {ROUTELLM_API_KEY}",
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "model": ROUTELLM_MODEL,
-            "messages": [{"role": "user", "content": user_message}],
-            "stream": True
-        }
-
-        try:
-            response = requests.post(url, headers=headers, json=payload, stream=True)
-            response.raise_for_status()
-            
-            # Use iter_content instead of iter_lines for true streaming
-            buffer = ""
-            for chunk in response.iter_content(chunk_size=1, decode_unicode=True):
-                if chunk:
-                    buffer += chunk
-                    
-                    # Process complete lines
-                    while "\n" in buffer:
-                        line, buffer = buffer.split("\n", 1)
-                        line = line.strip()
-                        
-                        if line.startswith("data: "):
-                            data_str = line[6:]  # Remove "data: " prefix
-                            
-                            if data_str == "[DONE]":
-                                return
-                            
-                            try:
-                                data = json.loads(data_str)
-                                if data.get("choices") and len(data["choices"]) > 0:
-                                    delta = data["choices"][0].get("delta", {})
-                                    content = delta.get("content", "")
-                                    
-                                    if content:
-                                        yield f"data: {json.dumps({'content': content})}\n\n"
-                            except json.JSONDecodeError:
-                                continue
-                                
-        except Exception as e:
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
-
-    return Response(
-        stream_with_context(generate_response()),
-        mimetype='text/event-stream',
-        headers={
-            'Cache-Control': 'no-cache',
-            'Connection': 'keep-alive',
-            'X-Accel-Buffering': 'no'
-        }
-    )
 
 @app.route('/api/pcap/upload', methods=['POST'])
 def upload_pcap():

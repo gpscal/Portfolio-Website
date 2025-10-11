@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <title>Dual LLM Research - FortiResearch</title>
+    <title>Dual LLM Research</title>
     <style>
         * {
             margin: 0;
@@ -42,40 +42,6 @@
             padding: 0;
         }
 
-        .chat-header {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px 15px 0 0;
-            padding: 20px 30px;
-            backdrop-filter: blur(0px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .chat-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-
-        .back-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-        }
-
-        .back-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-        }
-
         .chat-columns {
             display: flex;
             flex: 1;
@@ -97,6 +63,13 @@
             background: rgba(255, 255, 255, 0.1);
             padding: 15px 30px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .provider-info {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -122,6 +95,34 @@
         .routellm-badge {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
+        }
+
+        .column-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            color: #2c3e50;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
         }
 
         .chat-messages {
@@ -332,6 +333,24 @@
             }
         }
 
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: rgba(39, 174, 96, 0.9);
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
         @media (max-width: 768px) {
             .chat-columns {
                 flex-direction: column;
@@ -361,18 +380,25 @@
         <svg id="bu_network-svg"></svg>
     </div>
 
-    <div class="dual-chat-container">
-        <div class="chat-header">
-            <div class="chat-title">Dual LLM Research</div>
-            <a href="/" class="back-btn">← Home</a>
-        </div>
+    <div class="toast" id="toast"></div>
 
+    <div class="dual-chat-container">
         <div class="chat-columns">
             <!-- OpenAI Column -->
             <div class="chat-column">
                 <div class="column-header">
-                    <div class="provider-name">OpenAI</div>
-                    <div class="provider-badge openai-badge">GPT-4</div>
+                    <div class="provider-info">
+                        <div class="provider-name">OpenAI</div>
+                        <div class="provider-badge openai-badge">GPT-4</div>
+                    </div>
+                    <div class="column-actions">
+                        <button class="action-btn" onclick="copyChat('openai')" title="Copy Chat">
+                            📋 Copy
+                        </button>
+                        <button class="action-btn" onclick="exportChat('openai')" title="Export as Text">
+                            📥 Export
+                        </button>
+                    </div>
                 </div>
                 <div class="chat-messages" id="openaiChatMessages">
                     <div class="message">
@@ -387,8 +413,18 @@
             <!-- RouteLLM Column -->
             <div class="chat-column">
                 <div class="column-header">
-                    <div class="provider-name">RouteLLM</div>
-                    <div class="provider-badge routellm-badge">FortiResearch</div>
+                    <div class="provider-info">
+                        <div class="provider-name">RouteLLM</div>
+                        <div class="provider-badge routellm-badge">FortiResearch</div>
+                    </div>
+                    <div class="column-actions">
+                        <button class="action-btn" onclick="copyChat('routellm')" title="Copy Chat">
+                            📋 Copy
+                        </button>
+                        <button class="action-btn" onclick="exportChat('routellm')" title="Export as Text">
+                            📥 Export
+                        </button>
+                    </div>
                 </div>
                 <div class="chat-messages" id="routellmChatMessages">
                     <div class="message">
@@ -413,16 +449,73 @@
             </div>
         </div>
     </div>
-
+    <script src="/static/js/bu_network.js"></script>
     <script>
         const openaiChatMessages = document.getElementById('openaiChatMessages');
         const routellmChatMessages = document.getElementById('routellmChatMessages');
         const chatInput = document.getElementById('chatInput');
         const sendBtn = document.getElementById('sendBtn');
+        const toast = document.getElementById('toast');
 
         let openaiHistory = [];
         let routellmHistory = [];
         let isStreaming = false;
+
+        // Show toast notification
+        function showToast(message, duration = 3000) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        // Copy chat content to clipboard
+        function copyChat(provider) {
+            const chatMessages = document.getElementById(`${provider}ChatMessages`);
+            const messages = chatMessages.querySelectorAll('.message-content');
+            let text = '';
+            
+            messages.forEach(message => {
+                const isUser = message.closest('.message').classList.contains('user');
+                const prefix = isUser ? 'You: ' : `${provider === 'openai' ? 'OpenAI' : 'RouteLLM'}: `;
+                text += prefix + message.innerText + '\n\n';
+            });
+            
+            navigator.clipboard.writeText(text.trim()).then(() => {
+                showToast(`✅ ${provider === 'openai' ? 'OpenAI' : 'RouteLLM'} chat copied to clipboard!`);
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+                showToast('❌ Failed to copy chat');
+            });
+        }
+
+        // Export chat as text file
+        function exportChat(provider) {
+            const chatMessages = document.getElementById(`${provider}ChatMessages`);
+            const messages = chatMessages.querySelectorAll('.message-content');
+            let text = `${provider === 'openai' ? 'OpenAI' : 'RouteLLM'} Chat Export\n`;
+            text += `Generated on: ${new Date().toLocaleString()}\n`;
+            text += '='.repeat(50) + '\n\n';
+            
+            messages.forEach(message => {
+                const isUser = message.closest('.message').classList.contains('user');
+                const prefix = isUser ? 'You: ' : `${provider === 'openai' ? 'OpenAI' : 'RouteLLM'}: `;
+                text += prefix + message.innerText + '\n\n';
+            });
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${provider}-chat-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast(`📥 ${provider === 'openai' ? 'OpenAI' : 'RouteLLM'} chat exported!`);
+        }
 
         // Auto-resize textarea
         chatInput.addEventListener('input', function() {
