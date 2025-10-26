@@ -1,8 +1,8 @@
 import os
 import requests
 
-API_KEY ="AIzaSyDWRKgMbkn4G4imT7R5SjJlsUQUegfMQZ4"
-CX = "e4fb3a57eba014f07"
+API_KEY =""
+CX = ""
 
 def google_search(query, num_results=5):
     """Perform Google search using Custom Search API"""
